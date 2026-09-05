@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "buildCommand": "node scripts/build-vercel.js",
+  "outputDirectory": "client/dist",
+  "rewrites": [
+    { "source": "/admin/:path*", "destination": "/admin/index.html" },
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
