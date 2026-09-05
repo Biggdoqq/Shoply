@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import productRoutes from './routes/productRoutes.js';
@@ -26,6 +27,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static uploads
 const uploadsPath = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
 app.use('/uploads', express.static(uploadsPath));
 
 // API Routes
@@ -45,6 +49,26 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve frontend builds in production or if dist folders exist
+const adminDistPath = path.join(__dirname, '../../admin/dist');
+const clientDistPath = path.join(__dirname, '../../client/dist');
+
+// Serve Admin Portal at /admin
+if (fs.existsSync(adminDistPath)) {
+  app.use('/admin', express.static(adminDistPath));
+  app.get('/admin*', (req, res) => {
+    res.sendFile(path.join(adminDistPath, 'index.html'));
+  });
+}
+
+// Serve Storefront at /
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Unhandled Server Error:', err);
@@ -52,6 +76,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Shoply Server running on http://localhost:${PORT}`);
-  console.log(`📁 Uploads available at http://localhost:${PORT}/uploads`);
+  console.log(`🚀 Shoply Server running on port ${PORT}`);
+  console.log(`📁 Uploads available at /uploads`);
 });

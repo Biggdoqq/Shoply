@@ -88,6 +88,33 @@ npm run dev
 
 ---
 
+## ☁️ របៀប Deploy ឡើងទៅកាន់ Internet (Production Deployment)
+
+### ជម្រើសទី ១៖ Deploy លើ Render.com (ឥតគិតថ្លៃ & ងាយស្រួលបំផុត)
+1. ចូលទៅកាន់ [Render.com](https://render.com) ហើយចុះឈ្មោះ/ចូលដោយប្រើគណនី GitHub
+2. ចុច **New +** -> ជ្រើសរើស **Blueprint**
+3. ភ្ជាប់ជាមួយ Repository `Biggdoqq/Shoply`
+4. Render នឹងអាន File `render.yaml` ដោយស្វ័យប្រវត្តិ
+5. បំពេញ Environment Variables:
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_CHAT_ID`
+   - `KHQRPAY_PROFILE_ID`
+   - `KHQRPAY_SECRET_KEY`
+6. ចុច **Apply** — រួចរាល់! Render នឹងចេញ URL ផ្ទាល់ខ្លួនមួយ (ឧ. `https://shoply.onrender.com`) ដែលអាចចូលមើលបានទាំង Storefront (`/`), Admin (`/admin`), និង API (`/api`)។
+
+### ជម្រើសទី ២៖ Deploy លើ VPS (Ubuntu / Linux) ជាមួយ Docker
+ប្រសិនបើលោកអ្នកមាន Cloud VPS (Hostinger, DigitalOcean, Hetzner, etc.):
+```bash
+git clone https://github.com/Biggdoqq/Shoply.git
+cd Shoply
+cp server/.env.example server/.env
+# កែសម្រួល server/.env បញ្ចូល token របស់អ្នក
+docker compose up -d --build
+```
+ប្រព័ន្ធនឹងដំណើរការភ្លាមៗលើ Port 5000 នៃ IP ឬ Domain របស់ VPS របស់អ្នក។
+
+---
+
 ## 🤖 ការភ្ជាប់ Telegram Bot
 1. ស្វែងរក [@BotFather](https://t.me/BotFather) លើ Telegram រួចវាយ `/newbot` ដើម្បីយក **Bot Token**
 2. ស្វែងរក [@userinfobot](https://t.me/userinfobot) ដើម្បីយក **Chat ID** របស់អ្នក (ឬ Invite Bot ចូល Group រួចយក Group ID)
