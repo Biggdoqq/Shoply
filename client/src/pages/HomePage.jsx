@@ -21,18 +21,19 @@ import { useSettings } from '../context/SettingsContext';
 import ProductCard from '../components/ProductCard';
 import CountdownTimer from '../components/CountdownTimer';
 import HeroBannerSlider from '../components/HeroBannerSlider';
+import { DEFAULT_CATEGORIES, DEFAULT_PRODUCTS, DEFAULT_SETTINGS } from '../data/defaultData';
 
 export default function HomePage() {
   const { lang, t, getLocalized } = useLanguage();
   const { settings: globalSettings } = useSettings();
-  const [categories, setCategories] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [storeSettings, setStoreSettings] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [featuredProducts, setFeaturedProducts] = useState(DEFAULT_PRODUCTS.filter(p => p.isFeatured));
+  const [newArrivals, setNewArrivals] = useState(DEFAULT_PRODUCTS.slice(0, 8));
+  const [storeSettings, setStoreSettings] = useState(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (globalSettings && Object.keys(globalSettings).length > 0) {
+    if (globalSettings && typeof globalSettings === 'object' && Object.keys(globalSettings).length > 0) {
       setStoreSettings(globalSettings);
     }
   }, [globalSettings]);
@@ -45,16 +46,21 @@ export default function HomePage() {
           getProducts(),
           getSettings(),
         ]);
-        setCategories(catRes.data || []);
-        if (settingsRes.data) {
+        
+        if (Array.isArray(catRes?.data) && catRes.data.length > 0) {
+          setCategories(catRes.data);
+        }
+        if (settingsRes?.data && typeof settingsRes.data === 'object' && !Array.isArray(settingsRes.data)) {
           setStoreSettings(settingsRes.data);
         }
         
-        const allProds = prodRes.data || [];
-        setFeaturedProducts(allProds.filter(p => p.isFeatured));
-        setNewArrivals(allProds.slice(0, 8));
+        if (Array.isArray(prodRes?.data) && prodRes.data.length > 0) {
+          const prods = prodRes.data;
+          setFeaturedProducts(prods.filter(p => p.isFeatured));
+          setNewArrivals(prods.slice(0, 8));
+        }
       } catch (err) {
-        console.error('Error fetching home data:', err);
+        console.warn('API unavailable, keeping default store data:', err.message);
       } finally {
         setLoading(false);
       }

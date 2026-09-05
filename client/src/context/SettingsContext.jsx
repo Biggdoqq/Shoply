@@ -1,18 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getSettings } from '../api';
+import { DEFAULT_SETTINGS } from '../data/defaultData';
 
 const SettingsContext = createContext();
 
 export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState({});
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
   const fetchSettings = async () => {
     try {
       const res = await getSettings();
-      setSettings(res.data || {});
+      if (res?.data && typeof res.data === 'object' && !Array.isArray(res.data) && Object.keys(res.data).length > 0) {
+        setSettings(res.data);
+      } else {
+        setSettings(DEFAULT_SETTINGS);
+      }
     } catch (err) {
-      console.error('Failed to load store settings:', err);
+      console.warn('Using default store settings:', err.message);
+      setSettings(DEFAULT_SETTINGS);
     } finally {
       setLoading(false);
     }

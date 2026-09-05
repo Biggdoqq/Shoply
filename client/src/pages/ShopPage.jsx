@@ -4,14 +4,15 @@ import { Filter, Search, SlidersHorizontal, ArrowUpDown, X } from 'lucide-react'
 import { getProducts, getCategories } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import ProductCard from '../components/ProductCard';
+import { DEFAULT_CATEGORIES, DEFAULT_PRODUCTS } from '../data/defaultData';
 
 export default function ShopPage() {
   const { lang, t, getLocalized } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [loading, setLoading] = useState(false);
 
   // Filters state
   const selectedCategory = searchParams.get('category') || 'all';
@@ -30,9 +31,11 @@ export default function ShopPage() {
   const fetchCategories = async () => {
     try {
       const res = await getCategories();
-      setCategories(res.data || []);
+      if (Array.isArray(res?.data) && res.data.length > 0) {
+        setCategories(res.data);
+      }
     } catch (e) {
-      console.error(e);
+      console.warn('Using default categories');
     }
   };
 
@@ -54,12 +57,43 @@ export default function ShopPage() {
       }
 
       const res = await getProducts(params);
-      setProducts(res.data || []);
+      if (Array.isArray(res?.data) && res.data.length > 0) {
+        setProducts(res.data);
+      } else {
+        applyLocalFilter();
+      }
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.warn('API unavailable, applying local filter on default products');
+      applyLocalFilter();
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyLocalFilter = () => {
+    let prods = [...DEFAULT_PRODUCTS];
+    if (selectedCategory && selectedCategory !== 'all') {
+      const cat = DEFAULT_CATEGORIES.find(c => c.slug === selectedCategory);
+      if (cat) {
+        prods = prods.filter(p => p.categoryId === cat.id);
+      }
+    }
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      prods = prods.filter(p => 
+        p.nameKh.toLowerCase().includes(term) || 
+        p.nameEn.toLowerCase().includes(term)
+      );
+    }
+    if (isFeaturedOnly) {
+      prods = prods.filter(p => p.isFeatured);
+    }
+    if (selectedSort === 'price_asc') {
+      prods.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+    } else if (selectedSort === 'price_desc') {
+      prods.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+    }
+    setProducts(prods);
   };
 
   const handleCategoryChange = (slug) => {

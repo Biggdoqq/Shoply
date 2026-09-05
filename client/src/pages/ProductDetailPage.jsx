@@ -5,6 +5,7 @@ import { getProductById, getProducts } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
+import { DEFAULT_PRODUCTS } from '../data/defaultData';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -25,34 +26,53 @@ export default function ProductDetailPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
+  const setupProductView = (prod) => {
+    if (!prod) return;
+    setProduct(prod);
+
+    // Normalize images (can be array or json string)
+    let images = [];
+    if (Array.isArray(prod.images)) {
+      images = prod.images;
+    } else if (typeof prod.images === 'string') {
+      try { images = JSON.parse(prod.images); } catch { images = [prod.images]; }
+    }
+    setSelectedImage(images[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800');
+
+    // Normalize variants
+    let variants = [];
+    if (Array.isArray(prod.variants)) {
+      variants = prod.variants;
+    } else if (typeof prod.variants === 'string') {
+      try { variants = JSON.parse(prod.variants); } catch { variants = []; }
+    }
+    const initialVariants = {};
+    variants.forEach(v => {
+      if (v.options && v.options.length > 0) {
+        initialVariants[v.name] = v.options[0];
+      }
+    });
+    setSelectedVariants(initialVariants);
+
+    // Related products
+    const related = DEFAULT_PRODUCTS.filter(p => p.id !== prod.id).slice(0, 4);
+    setRelatedProducts(related);
+  };
+
   const fetchProductDetails = async () => {
     setLoading(true);
     try {
       const res = await getProductById(id);
-      const prod = res.data;
-      setProduct(prod);
-
-      // Initialize selected image
-      const images = Array.isArray(prod.images) ? prod.images : [];
-      setSelectedImage(images[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800');
-
-      // Initialize default variants
-      const variants = Array.isArray(prod.variants) ? prod.variants : [];
-      const initialVariants = {};
-      variants.forEach(v => {
-        if (v.options && v.options.length > 0) {
-          initialVariants[v.name] = v.options[0];
-        }
-      });
-      setSelectedVariants(initialVariants);
-
-      // Fetch related products from same category
-      if (prod.categoryId) {
-        const relatedRes = await getProducts({ category: prod.categoryId });
-        setRelatedProducts((relatedRes.data || []).filter(p => p.id !== prod.id).slice(0, 4));
+      if (res?.data && typeof res.data === 'object' && res.data.id) {
+        setupProductView(res.data);
+      } else {
+        const fallback = DEFAULT_PRODUCTS.find(p => p.id === id) || DEFAULT_PRODUCTS[0];
+        setupProductView(fallback);
       }
     } catch (err) {
-      console.error('Error fetching product:', err);
+      console.warn('API unavailable, loading local fallback product');
+      const fallback = DEFAULT_PRODUCTS.find(p => p.id === id) || DEFAULT_PRODUCTS[0];
+      setupProductView(fallback);
     } finally {
       setLoading(false);
     }

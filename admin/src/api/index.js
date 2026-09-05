@@ -11,6 +11,17 @@ const api = axios.create({
   },
 });
 
+// Guard against HTML error pages or SPA rewrites masquerading as JSON
+api.interceptors.response.use(
+  (response) => {
+    if (typeof response.data === 'string' && response.data.trim().startsWith('<!doctype html>')) {
+      return Promise.reject(new Error('Received HTML response instead of JSON from API'));
+    }
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const getProducts = (params) => api.get('/products', { params });
 export const getProductById = (id) => api.get(`/products/${id}`);
 export const createProduct = (data) => api.post('/products', data);

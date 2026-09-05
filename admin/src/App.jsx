@@ -477,12 +477,16 @@ export default function App() {
         getOrders(),
         getSettings(),
       ]);
-      setProducts(prodsRes.data || []);
-      setCategories(catsRes.data || []);
-      setOrders(ordersRes.data || []);
-      setSettingsState(settingsRes.data || {});
+      setProducts(Array.isArray(prodsRes?.data) ? prodsRes.data : []);
+      setCategories(Array.isArray(catsRes?.data) ? catsRes.data : []);
+      setOrders(Array.isArray(ordersRes?.data) ? ordersRes.data : []);
+      setSettingsState(typeof settingsRes?.data === 'object' && !Array.isArray(settingsRes.data) ? settingsRes.data : {});
     } catch (err) {
-      console.error('Error fetching admin data:', err);
+      console.warn('Error fetching admin data:', err.message);
+      setProducts([]);
+      setCategories([]);
+      setOrders([]);
+      setSettingsState({});
     } finally {
       setLoading(false);
     }
