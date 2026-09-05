@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" rx="18" fill="#005377"/>
+  <path d="M72 0 H100 V18 H72 Z" fill="#E31837"/>
+  <path d="M86 0 H100 V18 H86 Z" fill="#600D1C"/>
+  <text x="50" y="58" fill="#ffffff" font-family="'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" text-anchor="middle" letter-spacing="1">ABA</text>
+  <text x="50" y="78" fill="#ffffff" font-family="'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif" font-weight="800" font-size="11" text-anchor="middle" letter-spacing="4.5">BANK</text>
+</svg>
