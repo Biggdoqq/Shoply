@@ -1,10 +1,33 @@
-import TelegramBot from 'node-telegram-bot-api';
 import prisma from '../prisma.js';
+
+const TELEGRAM_TIMEOUT_MS = 10000;
+
+const callTelegramApi = async (token, method, payload) => {
+  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
+  });
+  const result = await response.json();
+  if (!response.ok || !result.ok) {
+    throw new Error(result.description || `Telegram API returned ${response.status}`);
+  }
+  return result.result;
+};
+
+const toPublicUrl = (value) => {
+  if (!value?.startsWith('/')) return value;
+  const hostname = process.env.APP_URL
+    || process.env.VERCEL_PROJECT_PRODUCTION_URL
+    || process.env.VERCEL_URL;
+  if (!hostname) return value;
+  const origin = /^https?:\/\//.test(hostname) ? hostname : `https://${hostname}`;
+  return new URL(value, origin).toString();
+};
 
 class TelegramService {
   constructor() {
-    this.bot = null;
-    this.token = null;
     this.chatId = null;
   }
 
@@ -26,20 +49,10 @@ class TelegramService {
     }
   }
 
-  async getBot() {
+  async getClient() {
     const { token, chatId } = await this.getCredentials();
     if (!token) return null;
-
-    if (!this.bot || this.token !== token) {
-      try {
-        this.bot = new TelegramBot(token, { polling: false });
-        this.token = token;
-      } catch (err) {
-        console.error('Failed to initialize Telegram Bot:', err.message);
-        return null;
-      }
-    }
-    return { bot: this.bot, chatId };
+    return { token, chatId };
   }
 
   formatMoney(amount) {
@@ -51,13 +64,13 @@ class TelegramService {
   }
 
   async sendOrderNotification(order) {
-    const client = await this.getBot();
+    const client = await this.getClient();
     if (!client || !client.chatId) {
       console.warn('⚠️ Telegram Bot Token or Chat ID is not configured. Order notification skipped.');
       return { success: false, message: 'Telegram bot not configured' };
     }
 
-    const { bot, chatId } = client;
+    const { token, chatId } = client;
 
     // Parse items
     let items = [];
@@ -119,12 +132,16 @@ ${itemsText}
     try {
       if (order.paymentProof) {
         // If image URL is full URL or local path
-        await bot.sendPhoto(chatId, order.paymentProof, {
+        await callTelegramApi(token, 'sendPhoto', {
+          chat_id: chatId,
+          photo: toPublicUrl(order.paymentProof),
           caption: messageHtml,
           parse_mode: 'HTML',
         });
       } else {
-        await bot.sendMessage(chatId, messageHtml, {
+        await callTelegramApi(token, 'sendMessage', {
+          chat_id: chatId,
+          text: messageHtml,
           parse_mode: 'HTML',
           disable_web_page_preview: true,
         });
@@ -137,10 +154,10 @@ ${itemsText}
   }
 
   async sendPaymentConfirmedNotification(order, details = {}) {
-    const client = await this.getBot();
+    const client = await this.getClient();
     if (!client || !client.chatId) return { success: false };
 
-    const { bot, chatId } = client;
+    const { token, chatId } = client;
     const totalUSD = this.formatMoney(order.totalAmount);
     const totalKHR = this.formatKHR(order.totalAmount);
     const confirmedTime = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Phnom_Penh' });
@@ -159,7 +176,9 @@ ${itemsText}
 `;
 
     try {
-      await bot.sendMessage(chatId, messageHtml, {
+      await callTelegramApi(token, 'sendMessage', {
+        chat_id: chatId,
+        text: messageHtml,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       });
@@ -174,14 +193,17 @@ ${itemsText}
     if (!token || !chatId) {
       throw new Error('Token and Chat ID are required');
     }
-    const testBot = new TelegramBot(token, { polling: false });
     const text = `
 🎉 <b>Shoply Telegram Notification Test</b>
 ━━━━━━━━━━━━━━━━━━━━
 ✅ <b>ជោគជ័យ!</b> ប្រព័ន្ធ Telegram Bot បានតភ្ជាប់ជាមួយ Shoply រួចរាល់ហើយ។
 រាល់ពេលមានអតិថិជនកុម្ម៉ង់ទិញទំនិញ អ្នកនឹងទទួលបានសារជូនដំណឹងភ្លាមៗនៅទីនេះ។
 `;
-    await testBot.sendMessage(chatId, text, { parse_mode: 'HTML' });
+    await callTelegramApi(token, 'sendMessage', {
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+    });
     return { success: true, message: 'Test message sent successfully' };
   }
 }

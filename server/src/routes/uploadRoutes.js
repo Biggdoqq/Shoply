@@ -1,74 +1,112 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import prisma from '../prisma.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  }
-});
+const allowedMimeTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
 
 const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|webp|gif|svg/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    const isAllowed = allowedMimeTypes.has(file.mimetype);
+    if (isAllowed) return cb(null, true);
 
-    if (mimetype && extname) {
-      return cb(null, true);
-    }
-    cb(new Error('Only image files (JPEG, PNG, WEBP, GIF, SVG) are allowed!'));
-  }
+    const error = new Error('Only JPEG, PNG, WEBP, and GIF images are allowed.');
+    error.statusCode = 400;
+    return cb(error);
+  },
 });
 
 const router = express.Router();
 
-const sendUploadedFile = (req, res) => {
+const storeUploadedFile = async (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image file uploaded' });
   }
 
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({
-    url: fileUrl,
-    filename: req.file.filename,
-    size: req.file.size
-  });
+  try {
+    const media = await prisma.media.create({
+      data: {
+        filename: req.file.originalname,
+        mimeType: req.file.mimetype,
+        data: req.file.buffer,
+        size: req.file.size,
+      },
+    });
+
+    return res.json({
+      url: `/api/upload/files/${media.id}`,
+      filename: media.filename,
+      size: media.size,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
-router.post('/payment-proof', upload.single('image'), sendUploadedFile);
-router.post('/', requireAdmin, upload.single('image'), sendUploadedFile);
+router.get('/files/:id', async (req, res, next) => {
+  try {
+    const media = await prisma.media.findUnique({ where: { id: req.params.id } });
+    if (!media) return res.status(404).json({ error: 'Image not found' });
 
-router.post('/multiple', requireAdmin, upload.array('images', 5), (req, res) => {
+    res.set({
+      'Content-Type': media.mimeType,
+      'Content-Length': String(media.size),
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    });
+    return res.send(Buffer.from(media.data));
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post('/payment-proof', upload.single('image'), storeUploadedFile);
+router.post('/', requireAdmin, upload.single('image'), storeUploadedFile);
+
+router.post('/multiple', requireAdmin, upload.array('images', 5), async (req, res, next) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ error: 'No image files uploaded' });
   }
 
-  const files = req.files.map(file => ({
-    url: `/uploads/${file.filename}`,
-    filename: file.filename,
-    size: file.size
-  }));
+  try {
+    const storedFiles = await prisma.$transaction(
+      req.files.map((file) => prisma.media.create({
+        data: {
+          filename: file.originalname,
+          mimeType: file.mimetype,
+          data: file.buffer,
+          size: file.size,
+        },
+      })),
+    );
 
-  res.json({ files });
+    return res.json({
+      files: storedFiles.map((file) => ({
+        url: `/api/upload/files/${file.id}`,
+        filename: file.filename,
+        size: file.size,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    return res.status(400).json({
+      error: error.code === 'LIMIT_FILE_SIZE'
+        ? 'Image must be 3 MB or smaller.'
+        : error.message,
+    });
+  }
+  return next(error);
 });
 
 export default router;

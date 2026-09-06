@@ -62,3 +62,12 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model Media {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  data      Bytes
+  size      Int
+  createdAt DateTime @default(now())
+}

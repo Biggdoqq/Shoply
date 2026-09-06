@@ -90,22 +90,12 @@ npm run dev
 
 ## ☁️ របៀប Deploy ឡើងទៅកាន់ Internet (Production Deployment)
 
-### ជម្រើសទី ១៖ Deploy លើ Render.com (ឥតគិតថ្លៃ & ងាយស្រួលបំផុត)
-1. ចូលទៅកាន់ [Render.com](https://render.com) ហើយចុះឈ្មោះ/ចូលដោយប្រើគណនី GitHub
-2. ចុច **New +** -> ជ្រើសរើស **Blueprint**
-3. ភ្ជាប់ជាមួយ Repository `Biggdoqq/Shoply`
-4. Render នឹងអាន File `render.yaml` ដោយស្វ័យប្រវត្តិ
-5. បំពេញ Environment Variables:
-   - `ADMIN_PIN` (លេខសម្ងាត់ថ្មីសម្រាប់ Admin)
-   - `TELEGRAM_BOT_TOKEN`
-   - `TELEGRAM_CHAT_ID`
-   - `KHQRPAY_PROFILE_ID`
-   - `KHQRPAY_SECRET_KEY`
-6. ចុច **Apply**។ Blueprint នឹងបង្កើត PostgreSQL database និង Backend URL មួយ (ឧ. `https://shoply.onrender.com`)។
-7. នៅ Vercel Project Settings → Environment Variables បង្កើត `BACKEND_URL` ហើយដាក់ Render Backend URL ខាងលើ។
-8. Redeploy Vercel។ `/api` និង `/uploads` នឹងបញ្ជូន request ទៅ backend ពិត ហើយ Admin នឹងអាន/កែ PostgreSQL database ដូចគ្នាជាមួយ Storefront។
-
-> Render PostgreSQL ផែនការ Free មានអាយុ 30 ថ្ងៃ។ សម្រាប់ហាងដែលប្រើជាផ្លូវការ គួរប្រើ PostgreSQL ផែនការដែលរក្សាទិន្នន័យរយៈពេលវែង។
+### ជម្រើសទី ១៖ Deploy លើ Vercel ជាមួយ Neon PostgreSQL
+1. Import Repository `Biggdoqq/Shoply` ចូល Vercel។
+2. នៅផ្ទាំង **Storage** បង្កើត Neon Postgres ហើយភ្ជាប់ទៅ Project។ Vercel នឹងបង្កើត `DATABASE_URL` ដោយស្វ័យប្រវត្តិ។
+3. នៅ **Settings → Environment Variables** បង្កើត `ADMIN_PIN` និង `ADMIN_TOKEN_SECRET` សម្រាប់ Production និង Preview។
+4. Deploy branch `main`។ Build script នឹង generate Prisma client, sync schema និង seed catalog ដំបូងដោយស្វ័យប្រវត្តិ។
+5. Express API នឹងដំណើរការនៅ `/api` ក្នុង Vercel ដោយផ្ទាល់ ហើយ Storefront និង Admin ប្រើ Neon database ដូចគ្នា។ រូបភាពថ្មីត្រូវបានរក្សាទុកក្នុង database ដើម្បីឱ្យនៅសល់ក្រោយ serverless redeploy។
 
 ### ជម្រើសទី ២៖ Deploy លើ VPS (Ubuntu / Linux) ជាមួយ Docker
 ប្រសិនបើលោកអ្នកមាន Cloud VPS (Hostinger, DigitalOcean, Hetzner, etc.):

@@ -16,6 +16,20 @@ execSync('npm --prefix client install', { stdio: 'inherit', cwd: rootDir });
 console.log('📦 Installing admin dependencies...');
 execSync('npm --prefix admin install', { stdio: 'inherit', cwd: rootDir });
 
+console.log('📦 Installing server dependencies...');
+execSync('npm --prefix server install', { stdio: 'inherit', cwd: rootDir });
+
+const isPostgres = /^(postgres|postgresql):\/\//.test(process.env.DATABASE_URL || '');
+if (isPostgres) {
+  console.log('🗄️ Preparing the production PostgreSQL database...');
+  execSync('npm --prefix server run prisma:generate:postgres', { stdio: 'inherit', cwd: rootDir });
+  execSync('npm --prefix server run prisma:push:postgres', { stdio: 'inherit', cwd: rootDir });
+  execSync('npm --prefix server run seed', { stdio: 'inherit', cwd: rootDir });
+} else {
+  console.log('🗄️ Preparing the local SQLite client...');
+  execSync('npm --prefix server run prisma:generate', { stdio: 'inherit', cwd: rootDir });
+}
+
 // 2. Build Client and Admin
 console.log('⚡ Building Client Storefront...');
 execSync('npm --prefix client run build', { stdio: 'inherit', cwd: rootDir });
