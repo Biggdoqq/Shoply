@@ -306,32 +306,33 @@ export default function HomePage() {
           {/* Flash Sale Products */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mt-6">
             {(featuredProducts.length > 0 ? featuredProducts : newArrivals).slice(0, 4).map((product) => (
-              <div key={product.id} className="relative group">
-                <ProductCard product={product} />
-                {/* Sale progress badge */}
-                <div className="mt-2 px-1">
+              <ProductCard key={product.id} product={product}>
+                {/* Sale progress badge neatly integrated inside the card */}
+                <div className="bg-rose-50/80 rounded-xl p-2 border border-rose-100/60">
                   <div className="flex items-center justify-between text-[10px] text-gray-500 font-semibold mb-1">
-                    <span className="text-rose-600 flex items-center gap-1">
+                    <span className="text-rose-600 flex items-center gap-1 font-bold">
                       <Flame className="w-3 h-3 fill-rose-500 text-rose-500" />
                       {lang === 'km' ? 'លក់អស់ 75%' : '75% Claimed'}
                     </span>
-                    <span>{lang === 'km' ? 'នៅសល់តិច' : 'Fast selling'}</span>
+                    <span className="text-[9px] text-rose-500 font-medium">
+                      {lang === 'km' ? 'នៅសល់តិច' : 'Fast selling'}
+                    </span>
                   </div>
-                  <div className="w-full h-1.5 bg-rose-100 rounded-full overflow-hidden">
+                  <div className="w-full h-1.5 bg-rose-200/60 rounded-full overflow-hidden">
                     <div className="h-full bg-linear-to-r from-amber-500 to-rose-500 rounded-full w-3/4" />
                   </div>
                 </div>
-              </div>
+              </ProductCard>
             ))}
           </div>
         </div>
       </section>
 
       {/* Categories Grid */}
-      <section id="categories-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
+      <section id="categories-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div>
-            <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide">
+            <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide leading-snug">
               {t('categories_title')}
             </h2>
             <p className="text-xs text-gray-500 mt-1">
@@ -340,7 +341,7 @@ export default function HomePage() {
           </div>
           <Link
             to="/shop"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group shrink-0"
           >
             <span>{t('view_all')}</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -375,18 +376,18 @@ export default function HomePage() {
       {/* Featured Products */}
       {featuredProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
                 <Sparkles className="w-4 h-4" />
               </div>
-              <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide">
+              <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide leading-snug">
                 {t('featured_products')}
               </h2>
             </div>
             <Link
               to="/shop?featured=true"
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group shrink-0"
             >
               <span>{t('view_all')}</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -437,18 +438,18 @@ export default function HomePage() {
 
       {/* New Arrivals Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
             </div>
-            <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide">
+            <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide leading-snug">
               {t('new_arrivals')}
             </h2>
           </div>
           <Link
             to="/shop"
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 group shrink-0"
           >
             <span>{t('view_all')}</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

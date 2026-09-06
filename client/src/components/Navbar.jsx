@@ -16,6 +16,7 @@ export default function Navbar() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,7 +28,9 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+      const inDesktop = searchContainerRef.current && searchContainerRef.current.contains(e.target);
+      const inMobile = mobileSearchRef.current && mobileSearchRef.current.contains(e.target);
+      if (!inDesktop && !inMobile) {
         setShowSuggestions(false);
       }
     };
@@ -241,7 +244,7 @@ export default function Navbar() {
 
       {/* Instant Mobile Search Bar */}
       <div className="md:hidden px-4 pb-2.5 pt-0.5 border-t border-gray-100/70 bg-white">
-        <div ref={searchContainerRef} className="relative">
+        <div ref={mobileSearchRef} className="relative">
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"

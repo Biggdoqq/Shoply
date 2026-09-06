@@ -16,7 +16,13 @@ html, body {
 
 .font-koulen {
   font-family: 'Koulen', 'Kantumruy Pro', cursive, system-ui, sans-serif;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+}
+
+/* Khmer diacritics and ascenders breathing room */
+:lang(km) {
+  line-height: 1.55;
 }
 
 /* Custom scrollbar */
