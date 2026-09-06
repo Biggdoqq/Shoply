@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Home, ShoppingBag, Truck, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,7 +7,6 @@ import { useLanguage } from '../context/LanguageContext';
 export default function MobileBottomNav() {
   const { totalItems, openCart } = useCart();
   const { lang } = useLanguage();
-  const location = useLocation();
 
   return (
     <nav 
@@ -21,14 +20,14 @@ export default function MobileBottomNav() {
           end
           className={({ isActive }) =>
             `flex flex-col items-center justify-center py-1 transition-all ${
-              isActive ? 'text-indigo-600 font-bold' : 'text-gray-400 hover:text-gray-700 font-medium'
+              isActive ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'
             }`
           }
         >
           {({ isActive }) => (
             <>
               <Home className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 stroke-[2.5]' : 'stroke-2'}`} />
-              <span className="text-[10px] mt-0.5 tracking-tight">
+              <span className="text-xs mt-0.5 tracking-tight">
                 {lang === 'km' ? 'ដើម' : 'Home'}
               </span>
               {isActive && <span className="w-1 h-1 bg-indigo-600 rounded-full mt-0.5" />}
@@ -41,14 +40,14 @@ export default function MobileBottomNav() {
           to="/shop"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center py-1 transition-all ${
-              isActive ? 'text-indigo-600 font-bold' : 'text-gray-400 hover:text-gray-700 font-medium'
+              isActive ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'
             }`
           }
         >
           {({ isActive }) => (
             <>
               <ShoppingBag className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 stroke-[2.5]' : 'stroke-2'}`} />
-              <span className="text-[10px] mt-0.5 tracking-tight">
+              <span className="text-xs mt-0.5 tracking-tight">
                 {lang === 'km' ? 'ទំនិញ' : 'Shop'}
               </span>
               {isActive && <span className="w-1 h-1 bg-indigo-600 rounded-full mt-0.5" />}
@@ -61,14 +60,14 @@ export default function MobileBottomNav() {
           to="/track-order"
           className={({ isActive }) =>
             `flex flex-col items-center justify-center py-1 transition-all ${
-              isActive ? 'text-indigo-600 font-bold' : 'text-gray-400 hover:text-gray-700 font-medium'
+              isActive ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'
             }`
           }
         >
           {({ isActive }) => (
             <>
               <Truck className={`w-5 h-5 transition-transform ${isActive ? 'scale-110 stroke-[2.5]' : 'stroke-2'}`} />
-              <span className="text-[10px] mt-0.5 tracking-tight">
+              <span className="text-xs mt-0.5 tracking-tight">
                 {lang === 'km' ? 'តាមដាន' : 'Track'}
               </span>
               {isActive && <span className="w-1 h-1 bg-indigo-600 rounded-full mt-0.5" />}
@@ -80,7 +79,7 @@ export default function MobileBottomNav() {
         <button
           type="button"
           onClick={openCart}
-          className="flex flex-col items-center justify-center py-1 text-gray-400 hover:text-gray-700 font-medium transition-colors relative cursor-pointer"
+          className="flex flex-col items-center justify-center py-1 text-gray-500 hover:text-gray-700 font-medium transition-colors relative cursor-pointer"
           aria-label="View Cart"
         >
           <div className="relative">
@@ -91,7 +90,7 @@ export default function MobileBottomNav() {
               </span>
             )}
           </div>
-          <span className="text-[10px] mt-0.5 tracking-tight">
+          <span className="text-xs mt-0.5 tracking-tight">
             {lang === 'km' ? 'កន្ត្រក' : 'Cart'}
           </span>
         </button>

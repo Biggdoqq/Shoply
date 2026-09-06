@@ -23,7 +23,6 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     fetchProductDetails();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
   const setupProductView = (prod) => {

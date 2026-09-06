@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, Search, Menu, X, Globe, ShoppingCart, Zap, Truck, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, Globe, ShoppingCart, Truck, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
@@ -78,44 +78,43 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-xs">
       {/* Top micro bar for announcements & Telegram alert badge */}
       <div className="bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs py-1.5 px-4 text-center font-medium flex items-center justify-center gap-2">
-        <span className="inline-flex items-center gap-1.5">
-          <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300 shrink-0" />
+        <span className="hidden sm:inline-flex items-center">
           <span>{t('telegram_alert_tag')}</span>
         </span>
-        <span className="opacity-60">•</span>
+        <span className="hidden sm:inline opacity-60">•</span>
         <span>
           {(lang === 'km' ? settings.announcement_km : settings.announcement_en) || t('free_delivery_tag')}
         </span>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex items-center justify-between min-h-16 py-2 gap-2 lg:gap-4">
           
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/" className="flex min-w-0 items-center gap-2 group">
             {settings.store_logo ? (
               <img 
                 src={settings.store_logo} 
                 alt={settings.store_name || 'Store Logo'} 
-                className="w-10 h-10 rounded-xl object-contain bg-white border border-gray-100 shadow-xs group-hover:scale-105 transition-transform" 
+                className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xl object-contain bg-white border border-gray-100 shadow-xs group-hover:scale-105 transition-transform"
               />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-linear-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
                 <ShoppingBag className="w-5 h-5" />
               </div>
             )}
-            <div className="flex flex-col">
-              <span className="font-extrabold text-xl tracking-tight text-gray-900 leading-none">
+            <div className="flex min-w-0 flex-col">
+              <span className="font-extrabold text-base sm:text-xl whitespace-nowrap truncate tracking-tight text-gray-900">
                 {settings.store_name || 'Shoply'}
               </span>
-              <span className="text-[10px] font-medium text-gray-400 tracking-wider uppercase">
+              <span className="text-xs font-medium text-gray-500 truncate">
                 {lang === 'km' ? 'ហាងទំនិញអនឡាញ' : 'Online Store'}
               </span>
             </div>
           </Link>
 
           {/* Desktop Search Bar with Live Suggestions */}
-          <div ref={searchContainerRef} className="hidden md:flex flex-1 max-w-md mx-4 relative">
+          <div ref={searchContainerRef} className="hidden lg:flex min-w-0 flex-1 max-w-md mx-2 relative">
             <form onSubmit={handleSearch} className="w-full relative">
               <input
                 type="text"
@@ -180,7 +179,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+          <nav className="hidden lg:flex shrink-0 items-center gap-4 text-sm font-medium text-gray-600">
             <Link
               to="/"
               className={`hover:text-indigo-600 transition-colors ${isActive('/') ? 'text-indigo-600 font-semibold' : ''}`}
@@ -203,15 +202,15 @@ export default function Navbar() {
           </nav>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
               type="button"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+              className="min-w-11 min-h-11 flex items-center justify-center gap-1 px-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               title="Change Language"
             >
-              <Globe className="w-3.5 h-3.5 text-indigo-600" />
+              <Globe className="hidden sm:block w-3.5 h-3.5 text-indigo-600" />
               <span className="font-bold tracking-wider">{lang === 'km' ? 'ខ្មែរ' : 'EN'}</span>
             </button>
 
@@ -219,7 +218,7 @@ export default function Navbar() {
             <button
               onClick={openCart}
               type="button"
-              className="relative p-2.5 rounded-xl bg-gray-100 hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition-colors cursor-pointer"
+              className="relative w-11 h-11 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-indigo-50 text-gray-700 hover:text-indigo-600 transition-colors cursor-pointer"
               aria-label="Open Cart"
             >
               <ShoppingCart className="w-5 h-5" />
@@ -233,7 +232,9 @@ export default function Navbar() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 cursor-pointer"
+              className="lg:hidden w-11 h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 cursor-pointer"
+              aria-label={lang === 'km' ? 'ម៉ឺនុយ' : 'Menu'}
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -243,7 +244,7 @@ export default function Navbar() {
       </div>
 
       {/* Instant Mobile Search Bar */}
-      <div className="md:hidden px-4 pb-2.5 pt-0.5 border-t border-gray-100/70 bg-white">
+      <div className="lg:hidden px-4 pb-2.5 pt-0.5 border-t border-gray-100/70 bg-white">
         <div ref={mobileSearchRef} className="relative">
           <form onSubmit={handleSearch} className="relative">
             <input
@@ -254,7 +255,7 @@ export default function Navbar() {
               onFocus={() => {
                 if (searchTerm.trim().length >= 1) setShowSuggestions(true);
               }}
-              className="w-full bg-gray-100/90 focus:bg-white text-xs text-gray-800 rounded-full pl-9 pr-4 py-2 border border-gray-200/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-hidden transition-all shadow-2xs"
+              className="w-full min-h-11 bg-gray-100/90 focus:bg-white text-base text-gray-800 rounded-full pl-9 pr-4 py-2 border border-gray-200/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-hidden transition-all shadow-2xs"
             />
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </form>
@@ -294,7 +295,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pt-2 pb-6 space-y-2">
+        <div className="lg:hidden border-t border-gray-100 bg-white px-4 pt-2 pb-6 space-y-2">
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"

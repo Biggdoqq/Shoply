@@ -26,8 +26,8 @@ export default function CartDrawer() {
         className="absolute inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-fade-in"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+      <div className="fixed inset-y-0 right-0 w-full max-w-md flex pl-4 sm:pl-10">
+        <div className="w-full min-w-0 bg-white shadow-2xl flex flex-col">
           
           {/* Header */}
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -39,14 +39,15 @@ export default function CartDrawer() {
             </div>
             <button
               onClick={closeCart}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="w-11 h-11 shrink-0 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              aria-label={lang === 'km' ? 'បិទកន្ត្រក' : 'Close cart'}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 divide-y divide-gray-100">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 divide-y divide-gray-100">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
@@ -114,7 +115,8 @@ export default function CartDrawer() {
                         <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                           <button
                             onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                            className="p-1 hover:bg-gray-200 text-gray-600 transition-colors"
+                            className="w-11 h-11 flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+                            aria-label={lang === 'km' ? 'បន្ថយចំនួន' : 'Decrease quantity'}
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
@@ -123,7 +125,8 @@ export default function CartDrawer() {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                            className="p-1 hover:bg-gray-200 text-gray-600 transition-colors"
+                            className="w-11 h-11 flex items-center justify-center hover:bg-gray-200 text-gray-600 transition-colors"
+                            aria-label={lang === 'km' ? 'បន្ថែមចំនួន' : 'Increase quantity'}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -131,7 +134,7 @@ export default function CartDrawer() {
 
                         <button
                           onClick={() => removeFromCart(item.cartItemId)}
-                          className="text-gray-400 hover:text-rose-500 p-1 transition-colors"
+                          className="w-11 h-11 shrink-0 flex items-center justify-center text-gray-500 hover:text-rose-500 transition-colors"
                           title="Remove item"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -146,7 +149,7 @@ export default function CartDrawer() {
 
           {/* Footer & Checkout Action */}
           {items.length > 0 && (
-            <div className="p-4 border-t border-gray-100 bg-gray-50 space-y-3">
+            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-gray-100 bg-gray-50 space-y-3">
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>{t('subtotal')}</span>

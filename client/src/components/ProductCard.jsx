@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye, Sparkles, Star, Flame } from 'lucide-react';
+import { ShoppingCart, Eye, Sparkles, Flame } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 
@@ -20,10 +20,6 @@ export default function ProductCard({ product, children }) {
     : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500';
 
   const khrPrice = (Math.round(currentPrice * 4100)).toLocaleString();
-
-  // Pseudo-deterministic rating based on product id for consistent aesthetic reviews
-  const ratingScore = 4.8 + ((product.id?.charCodeAt(0) || 5) % 3) * 0.1;
-  const reviewCount = 28 + ((product.id?.charCodeAt(1) || 12) % 45);
 
   // Check variants info
   const variants = Array.isArray(product.variants) ? product.variants : [];
@@ -107,43 +103,28 @@ export default function ProductCard({ product, children }) {
       <div className="p-3 sm:p-4 flex flex-col flex-1">
         
         {/* Category & Variant info */}
-        <div className="flex items-center justify-between gap-1.5 mb-1 min-h-[16px]">
+        <div className="flex flex-wrap items-center gap-1.5 mb-1 min-h-5">
           {product.category && (
-            <span className="text-[10px] sm:text-xs font-bold text-indigo-600 truncate max-w-[65%]">
+            <span className="text-xs font-bold text-indigo-700 truncate max-w-full">
               {getLocalized(product.category, 'name')}
             </span>
           )}
           {variantSummary && (
-            <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium shrink-0 bg-gray-50 px-1.5 py-0.5 rounded-md">
+            <span className="text-xs text-gray-600 font-medium bg-gray-50 px-1.5 py-0.5 rounded-md">
               {variantSummary}
             </span>
           )}
         </div>
 
-        {/* Title: Fixed height, strict overflow clipping, prevents Safari line-clamp expansion */}
+        {/* Reserve two full Khmer lines without flex stretching or clipping diacritics. */}
         <div className="mb-1.5">
           <Link
             to={`/product/${product.id}`}
-            className="font-medium text-gray-900 hover:text-indigo-600 transition-colors line-clamp-2 text-xs sm:text-sm leading-snug h-8 sm:h-9 overflow-hidden block"
+            className="product-card-title font-medium text-gray-900 hover:text-indigo-600 transition-colors"
             title={name}
           >
             {name}
           </Link>
-        </div>
-
-        {/* Rating Stars */}
-        <div className="flex items-center gap-1 mb-2">
-          <div className="flex text-amber-400">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400 text-amber-400" />
-            ))}
-          </div>
-          <span className="text-[10px] sm:text-[11px] font-bold text-gray-700 ml-0.5">
-            {ratingScore.toFixed(1)}
-          </span>
-          <span className="text-[9px] sm:text-[10px] text-gray-400">
-            ({reviewCount})
-          </span>
         </div>
 
         {/* Optional Slot: e.g. Flash Sale Progress Bar inside the card */}
@@ -154,19 +135,19 @@ export default function ProductCard({ product, children }) {
         )}
 
         {/* Price and Cart Button */}
-        <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-1.5 mt-auto">
-          <div className="min-w-0 flex-1">
+        <div className="pt-2 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2 mt-auto">
+          <div className="min-w-0 flex-1 basis-20">
             <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
               <span className="text-sm sm:text-base font-black text-gray-900 leading-tight">
                 ${currentPrice.toFixed(2)}
               </span>
               {hasDiscount && (
-                <span className="text-[10px] sm:text-xs text-gray-400 line-through font-normal">
+                <span className="text-xs text-gray-500 line-through font-normal">
                   ${product.price.toFixed(2)}
                 </span>
               )}
             </div>
-            <span className="text-[9px] sm:text-[11px] text-gray-400 font-medium block truncate mt-0.5">
+            <span className="text-xs text-gray-600 font-medium block mt-0.5">
               ≈ {khrPrice} ៛
             </span>
           </div>
@@ -174,10 +155,11 @@ export default function ProductCard({ product, children }) {
           <button
             onClick={handleQuickAdd}
             disabled={product.stock <= 0}
-            className="p-2 sm:p-2.5 rounded-xl bg-gray-900 text-white hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-600/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed active:scale-90 transition-all cursor-pointer shrink-0"
+            className="w-11 h-11 ml-auto flex items-center justify-center rounded-xl bg-gray-900 text-white hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-600/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed active:scale-90 transition-all cursor-pointer shrink-0"
+            aria-label={t('add_to_cart')}
             title={t('add_to_cart')}
           >
-            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <ShoppingCart className="w-5 h-5" />
           </button>
         </div>
 

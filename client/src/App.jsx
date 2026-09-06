@@ -13,10 +13,12 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import TrackOrderPage from './pages/TrackOrderPage';
 import FloatingTelegramButton from './components/FloatingTelegramButton';
 import MobileBottomNav from './components/MobileBottomNav';
+import RouteScroll from './components/RouteScroll';
 
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans selection:bg-indigo-500 selection:text-white pb-20 md:pb-0">
+      <RouteScroll />
       <Navbar />
       
       <main className="flex-1">

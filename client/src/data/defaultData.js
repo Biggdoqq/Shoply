@@ -9,7 +9,7 @@ export const DEFAULT_SETTINGS = {
   khqr_account: '001 568 992',
 };
 
-export const DEFAULT_CATEGORIES = [
+const CATEGORY_DATA = [
   {
     id: 'cat-clothing',
     nameKh: 'សម្លៀកបំពាក់',
@@ -205,3 +205,9 @@ export const DEFAULT_PRODUCTS = [
     ]
   }
 ];
+
+// Keep fallback counts consistent with the catalog displayed when the API is unavailable.
+export const DEFAULT_CATEGORIES = CATEGORY_DATA.map(category => ({
+  ...category,
+  _count: { products: DEFAULT_PRODUCTS.filter(product => product.categoryId === category.id).length },
+}));

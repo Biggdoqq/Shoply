@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, 
-  Sparkles, 
   Send, 
   ChevronLeft, 
   ChevronRight,
@@ -196,8 +195,7 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
       {/* Slide Content - Clean, responsive, never crammed */}
       <div className="relative z-10 max-w-5xl px-4 py-3 sm:px-8 sm:py-8 lg:py-10 flex-1 flex flex-col justify-center items-start sm:items-center text-left sm:text-center overflow-hidden">
         {/* Badge */}
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-4 sm:py-1.5 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[10px] sm:text-xs font-semibold mb-1.5 sm:mb-3 backdrop-blur-md shrink-0">
-          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+        <div className="inline-flex items-center px-2.5 py-0.5 sm:px-4 sm:py-1.5 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[10px] sm:text-xs font-semibold mb-1.5 sm:mb-3 backdrop-blur-md shrink-0">
           <span>{lang === 'km' ? activeSlide.badgeKm : activeSlide.badgeEn}</span>
         </div>
 

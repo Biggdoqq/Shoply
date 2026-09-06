@@ -11,15 +11,11 @@ import {
   Users, 
   Truck, 
   Flame, 
-  CheckCircle,
-  MessageCircle,
-  Clock
 } from 'lucide-react';
 import { getProducts, getCategories, getSettings } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 import ProductCard from '../components/ProductCard';
-import CountdownTimer from '../components/CountdownTimer';
 import HeroBannerSlider from '../components/HeroBannerSlider';
 import { DEFAULT_CATEGORIES, DEFAULT_PRODUCTS, DEFAULT_SETTINGS } from '../data/defaultData';
 
@@ -27,10 +23,11 @@ export default function HomePage() {
   const { lang, t, getLocalized } = useLanguage();
   const { settings: globalSettings } = useSettings();
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [featuredProducts, setFeaturedProducts] = useState(DEFAULT_PRODUCTS.filter(p => p.isFeatured));
-  const [newArrivals, setNewArrivals] = useState(DEFAULT_PRODUCTS.slice(0, 8));
+  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const featuredProducts = products.filter(p => p.isFeatured);
+  const newArrivals = products.slice(0, 8);
+  const saleProducts = products.filter(p => p.stock > 0 && p.salePrice > 0 && p.salePrice < p.price);
   const [storeSettings, setStoreSettings] = useState(DEFAULT_SETTINGS);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (globalSettings && typeof globalSettings === 'object' && Object.keys(globalSettings).length > 0) {
@@ -55,14 +52,10 @@ export default function HomePage() {
         }
         
         if (Array.isArray(prodRes?.data) && prodRes.data.length > 0) {
-          const prods = prodRes.data;
-          setFeaturedProducts(prods.filter(p => p.isFeatured));
-          setNewArrivals(prods.slice(0, 8));
+          setProducts(prodRes.data);
         }
       } catch (err) {
         console.warn('API unavailable, keeping default store data:', err.message);
-      } finally {
-        setLoading(false);
       }
     };
     fetchData();
@@ -96,42 +89,6 @@ export default function HomePage() {
       value: '24/7',
       labelKm: 'Telegram Bot ដំណឹងភ្លាមៗ',
       labelEn: 'Instant Bot Alerts',
-    },
-  ];
-
-  const DEFAULT_TESTIMONIALS = [
-    {
-      id: 1,
-      nameKm: 'ចាន់ សុខា',
-      nameEn: 'Sokha Chan',
-      locationKm: 'រាជធានីភ្នំពេញ',
-      locationEn: 'Phnom Penh',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=face',
-      rating: 5,
-      commentKm: 'ទំនិញមានគុណភាពល្អលើសពីការរំពឹងទុក! ដឹកជញ្ជូនលឿនមែនទែន ហើយបង់ប្រាក់តាម KHQR ងាយស្រួល ថែមទាំងមាន Telegram Bot ផ្ញើសារប្រាប់ភ្លាមៗទៀត។',
-      commentEn: 'The quality exceeded my expectations! Super fast delivery, seamless KHQR payment, and instant Telegram notification right after ordering.',
-    },
-    {
-      id: 2,
-      nameKm: 'ដេវីដ គីម',
-      nameEn: 'David Kim',
-      locationKm: 'ខេត្តសៀមរាប',
-      locationEn: 'Siem Reap',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face',
-      rating: 5,
-      commentKm: 'សេវាកម្មល្អឥតខ្ចោះ! រូបភាពនិងទំនិញពិតដូចគ្នាបេះបិទ។ ការឆ្លើយតបលើ Telegram លឿន និងគួរឱ្យទុកចិត្ត។ ឲ្យពិន្ទុ 10/10!',
-      commentEn: 'Exceptional shopping experience! The item is 100% as pictured. Fast customer support response on Telegram. 10/10 recommend!',
-    },
-    {
-      id: 3,
-      nameKm: 'រិន បុប្ផា',
-      nameEn: 'Bopha Rin',
-      locationKm: 'ខេត្តបាត់ដំបង',
-      locationEn: 'Battambang',
-      avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop&crop=face',
-      rating: 5,
-      commentKm: 'សាច់ក្រណាត់ស្អាត និងម៉ូតទាន់សម័យខ្លាំងណាស់។ កុម្ម៉ង់ ២ លើកហើយ មិនដែលខកបំណងទេ។ Admin រួសរាយឆ្លើយតបរហ័ស!',
-      commentEn: 'Super trendy styles and premium fabric. Ordered twice already, never disappointed. Very friendly and polite customer service!',
     },
   ];
 
@@ -173,19 +130,17 @@ export default function HomePage() {
         }
       } catch (e) {}
     }
-    return DEFAULT_TESTIMONIALS;
+    return [];
   }, [storeSettings.customer_testimonials]);
 
   // Flash Sale Settings
-  const flashSaleEnabled = storeSettings.flash_sale_enabled !== 'false';
+  const flashSaleEnabled = storeSettings.flash_sale_enabled !== 'false' && storeSettings.flash_sale_enabled !== false;
   const flashSaleTitle = lang === 'km'
-    ? (storeSettings.flash_sale_title_km || 'ការលក់បញ្ចុះតម្លៃពិសេសប្រចាំថ្ងៃ')
-    : (storeSettings.flash_sale_title_en || 'Today\'s Limited Flash Deals');
+    ? (storeSettings.flash_sale_title_km || 'ទំនិញបញ្ចុះតម្លៃ')
+    : (storeSettings.flash_sale_title_en || 'Special Offers');
   const flashSaleSubtitle = lang === 'km'
-    ? (storeSettings.flash_sale_subtitle_km || 'បញ្ចុះតម្លៃពិសេសមានកំណត់! កុម្ម៉ង់ឱ្យទាន់ពេលមុនទំនិញលក់អស់')
-    : (storeSettings.flash_sale_subtitle_en || 'Hurry! Limited stock at special promotional prices');
-  const flashHours = parseInt(storeSettings.flash_sale_hours || '8', 10);
-  const flashMinutes = parseInt(storeSettings.flash_sale_minutes || '34', 10);
+    ? (storeSettings.flash_sale_subtitle_km || 'ជ្រើសរើសទំនិញដែលកំពុងមានតម្លៃពិសេស')
+    : (storeSettings.flash_sale_subtitle_en || 'Explore products currently available at reduced prices');
 
   // Promo Banner Settings
   const promoTitle = lang === 'km'
@@ -259,10 +214,10 @@ export default function HomePage() {
                   <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-koulen text-base sm:text-xl text-gray-900 leading-tight">
+                  <div className="text-base sm:text-xl font-bold text-gray-900 leading-tight">
                     {item.value}
                   </div>
-                  <div className="text-[11px] sm:text-xs text-gray-500 font-medium truncate mt-0.5">
+                  <div className="text-xs text-gray-600 font-medium mt-0.5">
                     {lang === 'km' ? item.labelKm : item.labelEn}
                   </div>
                 </div>
@@ -272,27 +227,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Flash Sale Section with Countdown Timer */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Offers reflect current product prices and stock. */}
+      {flashSaleEnabled && saleProducts.length > 0 && <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-linear-to-r from-rose-50 via-amber-50/60 to-indigo-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-rose-200/70 shadow-xs relative overflow-hidden">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-rose-200/50">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500 text-white text-[11px] font-bold uppercase tracking-wider shadow-xs">
                 <Flame className="w-3.5 h-3.5 fill-current" />
-                <span>{lang === 'km' ? 'ប្រូម៉ូសិនពិសេស' : 'Flash Sale'}</span>
+                <span>{lang === 'km' ? 'ប្រូម៉ូសិនពិសេស' : 'Special Offers'}</span>
               </div>
               <h2 className="font-koulen text-2xl sm:text-3xl text-gray-900 tracking-wide flex items-center gap-2">
                 <Zap className="w-6 h-6 text-amber-500 fill-amber-400 shrink-0" />
-                <span>{lang === 'km' ? 'ការលក់បញ្ចុះតម្លៃពិសេសប្រចាំថ្ងៃ' : 'Today\'s Limited Flash Deals'}</span>
+                <span>{flashSaleTitle}</span>
               </h2>
               <p className="text-xs text-gray-600">
-                {lang === 'km' ? 'បញ្ចុះតម្លៃពិសេសមានកំណត់! កុម្ម៉ង់ឱ្យទាន់ពេលមុនទំនិញលក់អស់' : 'Hurry! Limited stock at special promotional prices'}
+                {flashSaleSubtitle}
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-              <CountdownTimer hours={8} minutes={34} seconds={20} />
               <Link
                 to="/shop"
                 className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 bg-white px-4 py-2.5 rounded-xl border border-rose-200 shadow-xs hover:shadow-sm transition-all"
@@ -305,28 +259,18 @@ export default function HomePage() {
 
           {/* Flash Sale Products */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mt-6">
-            {(featuredProducts.length > 0 ? featuredProducts : newArrivals).slice(0, 4).map((product) => (
+            {saleProducts.slice(0, 4).map((product) => (
               <ProductCard key={product.id} product={product}>
-                {/* Sale progress badge neatly integrated inside the card */}
-                <div className="bg-rose-50/80 rounded-xl p-2 border border-rose-100/60">
-                  <div className="flex items-center justify-between text-[10px] text-gray-500 font-semibold mb-1">
-                    <span className="text-rose-600 flex items-center gap-1 font-bold">
-                      <Flame className="w-3 h-3 fill-rose-500 text-rose-500" />
-                      {lang === 'km' ? 'លក់អស់ 75%' : '75% Claimed'}
-                    </span>
-                    <span className="text-[9px] text-rose-500 font-medium">
-                      {lang === 'km' ? 'នៅសល់តិច' : 'Fast selling'}
-                    </span>
+                {Number.isInteger(product.stock) && product.stock > 0 && (
+                  <div className="bg-rose-50 rounded-xl px-2 py-1.5 text-xs text-rose-700 font-medium">
+                    {lang === 'km' ? `មានក្នុងស្តុក ${product.stock}` : `${product.stock} in stock`}
                   </div>
-                  <div className="w-full h-1.5 bg-rose-200/60 rounded-full overflow-hidden">
-                    <div className="h-full bg-linear-to-r from-amber-500 to-rose-500 rounded-full w-3/4" />
-                  </div>
-                </div>
+                )}
               </ProductCard>
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Categories Grid */}
       <section id="categories-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
@@ -364,9 +308,11 @@ export default function HomePage() {
                 <span className="text-white font-bold text-sm sm:text-base leading-tight">
                   {getLocalized(cat, 'name')}
                 </span>
-                <span className="text-[11px] text-gray-300 font-medium">
-                  {cat._count?.products || 0} {lang === 'km' ? 'ទំនិញ' : 'items'}
-                </span>
+                {Number.isInteger(cat._count?.products) && cat._count.products >= 0 && (
+                  <span className="text-xs text-gray-100 font-medium">
+                    {cat._count.products} {lang === 'km' ? 'ទំនិញ' : 'items'}
+                  </span>
+                )}
               </div>
             </Link>
           ))}
@@ -463,15 +409,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Customer Reviews & Testimonials Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Show testimonials only when supplied by the store. */}
+      {testimonials.length > 0 && <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold mb-3 border border-indigo-100">
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span>{lang === 'km' ? 'មតិកែលម្អពីអតិថិជន' : 'Customer Reviews'}</span>
           </div>
           <h2 className="font-koulen text-3xl sm:text-4xl text-gray-900 tracking-wide">
-            {lang === 'km' ? 'អតិថិជនពេញចិត្ត 5 ផ្កាយ' : 'Loved by Happy Shoppers'}
+            {lang === 'km' ? 'មតិយោបល់ពីអតិថិជន' : 'Customer Feedback'}
           </h2>
           <p className="text-xs sm:text-sm text-gray-500 mt-2">
             {lang === 'km' ? 'ស្ដាប់មតិយោបល់ពិតប្រាកដពីអតិថិជនដែលបានទិញទំនិញពី Shoply' : 'Read genuine feedback from shoppers who trust Shoply every day'}
@@ -509,7 +455,6 @@ export default function HomePage() {
                     <span className="font-bold text-xs sm:text-sm text-gray-900 truncate">
                       {lang === 'km' ? item.nameKm : item.nameEn}
                     </span>
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   </div>
                   <span className="text-[11px] text-gray-400 block truncate">
                     {lang === 'km' ? item.locationKm : item.locationEn}
@@ -519,9 +464,7 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
-
-
+      </section>}
 
     </div>
   );
