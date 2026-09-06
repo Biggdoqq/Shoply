@@ -4,7 +4,7 @@ import { ShoppingBag, ArrowLeft, CheckCircle2, ShieldCheck, QrCode, Banknote, Up
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
-import { createOrder, uploadImage, createPaymentSession } from '../api';
+import { createOrder, uploadPaymentProof, createPaymentSession } from '../api';
 import AbaLogo from '../components/AbaLogo';
 import KHQRModal from '../components/KHQRModal';
 
@@ -84,7 +84,7 @@ export default function CheckoutPage() {
       if (paymentProofFile) {
         const formData = new FormData();
         formData.append('image', paymentProofFile);
-        const uploadRes = await uploadImage(formData);
+        const uploadRes = await uploadPaymentProof(formData);
         uploadedProofUrl = uploadRes.data.url;
       }
 

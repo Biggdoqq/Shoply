@@ -12,6 +12,7 @@
     "dev": "concurrently -n \"SERVER,CLIENT,ADMIN\" -c \"blue,green,magenta\" \"npm run server\" \"npm run client\" \"npm run admin\"",
     "build": "node scripts/build-vercel.js",
     "build:prod": "npm --prefix server install && npm --prefix server run prisma:push && npm --prefix client install && npm --prefix client run build && npm --prefix admin install && npm --prefix admin run build",
+    "build:render": "npm --prefix server install && npm --prefix server run prisma:generate:postgres && npm --prefix server run prisma:push:postgres && npm --prefix server run seed && npm --prefix client install && npm --prefix client run build && npm --prefix admin install && npm --prefix admin run build",
     "start": "node server/src/index.js"
   },
   "devDependencies": {

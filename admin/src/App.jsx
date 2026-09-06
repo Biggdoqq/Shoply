@@ -58,7 +58,8 @@ import {
   FileText,
   Copy,
   EyeOff,
-  CreditCard
+  CreditCard,
+  Menu
 } from 'lucide-react';
 import {
   getProducts,
@@ -75,8 +76,16 @@ import {
   getSettings,
   updateSettings,
   testTelegram,
-  uploadImage
+  uploadImage,
+  loginAdmin,
+  checkAdminSession
 } from './api';
+
+const STOREFRONT_URL = import.meta.env.VITE_STOREFRONT_URL?.replace(/\/$/, '')
+  || (typeof window !== 'undefined' ? window.location.origin : '/');
+
+const API_ORIGIN = import.meta.env.VITE_API_URL?.replace(/\/$/, '')
+  || (typeof window !== 'undefined' ? window.location.origin : '');
 
 const DEFAULT_HERO_SLIDES = [
   {
@@ -233,16 +242,40 @@ function CircleWatermark() {
 }
 
 // Visit and Sales Multi-Bar Chart matching screenshot
-function VisitAndSalesChart() {
-  const chartData = [
-    { day: 'Mon', completed: 42, pending: 22, shipped: 68 },
-    { day: 'Tue', completed: 68, pending: 38, shipped: 82 },
-    { day: 'Wed', completed: 32, pending: 18, shipped: 45 },
-    { day: 'Thu', completed: 58, pending: 32, shipped: 72 },
-    { day: 'Fri', completed: 88, pending: 48, shipped: 94 },
-    { day: 'Sat', completed: 64, pending: 36, shipped: 78 },
-    { day: 'Sun', completed: 52, pending: 24, shipped: 58 },
-  ];
+function VisitAndSalesChart({ orders }) {
+  const chartData = React.useMemo(() => {
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - (6 - index));
+      return {
+        date,
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        completed: 0,
+        pending: 0,
+        shipped: 0,
+      };
+    });
+
+    orders.forEach((order) => {
+      const orderDate = new Date(order.createdAt);
+      const bucket = days.find(({ date }) => (
+        orderDate.getFullYear() === date.getFullYear()
+        && orderDate.getMonth() === date.getMonth()
+        && orderDate.getDate() === date.getDate()
+      ));
+      if (!bucket) return;
+
+      if (order.status === 'DELIVERED') bucket.completed += 1;
+      else if (order.status === 'SHIPPED') bucket.shipped += 1;
+      else if (order.status !== 'CANCELLED') bucket.pending += 1;
+    });
+
+    return days;
+  }, [orders]);
+
+  const maxCount = Math.max(1, ...chartData.flatMap(item => [item.completed, item.pending, item.shipped]));
+  const barHeight = (value) => value === 0 ? 0 : Math.max(8, (value / maxCount) * 100);
 
   return (
     <div className="w-full h-64 relative flex flex-col justify-between pt-4">
@@ -261,19 +294,19 @@ function VisitAndSalesChart() {
             <div className="flex items-end gap-1 sm:gap-1.5 h-44">
               {/* Purple Bar: Completed / Revenue */}
               <div
-                style={{ height: `${item.completed}%` }}
+                style={{ height: `${barHeight(item.completed)}%` }}
                 className="w-1.5 sm:w-2.5 bg-[#b66dff] rounded-t-sm"
-                title={`Completed: ${item.completed}`}
+                title={`Delivered: ${item.completed}`}
               />
               {/* Pink Bar: Pending */}
               <div
-                style={{ height: `${item.pending}%` }}
+                style={{ height: `${barHeight(item.pending)}%` }}
                 className="w-1.5 sm:w-2.5 bg-[#fe7096] rounded-t-sm"
-                title={`Pending: ${item.pending}`}
+                title={`Open: ${item.pending}`}
               />
               {/* Cyan Bar: Shipped / Total */}
               <div
-                style={{ height: `${item.shipped}%` }}
+                style={{ height: `${barHeight(item.shipped)}%` }}
                 className="w-1.5 sm:w-2.5 bg-[#047edf] rounded-t-sm"
                 title={`Shipped: ${item.shipped}`}
               />
@@ -286,80 +319,49 @@ function VisitAndSalesChart() {
   );
 }
 
-// Traffic Sources Donut Chart matching screenshot
-function TrafficSourcesChart() {
-  const c = 251.327;
-  const p1 = c * 0.55; // 55% Pink #fe7096
-  const p2 = c * 0.30; // 30% Cyan #047edf
-  const p3 = c * 0.15; // 15% Teal #07cdae
+function OrderStatusChart({ orders }) {
+  const groups = [
+    {
+      label: 'Open orders',
+      count: orders.filter(order => ['PENDING', 'CONFIRMED'].includes(order.status)).length,
+      color: '#fe7096',
+    },
+    { label: 'Shipped', count: orders.filter(order => order.status === 'SHIPPED').length, color: '#047edf' },
+    { label: 'Delivered', count: orders.filter(order => order.status === 'DELIVERED').length, color: '#07cdae' },
+    { label: 'Cancelled', count: orders.filter(order => order.status === 'CANCELLED').length, color: '#94a3b8' },
+  ];
+  const total = orders.length;
+  let offset = 0;
+  const stops = groups.map((group) => {
+    const start = offset;
+    offset += total ? (group.count / total) * 100 : 0;
+    return `${group.color} ${start}% ${offset}%`;
+  }).join(', ');
 
   return (
     <div className="flex flex-col items-center justify-between flex-1 py-1">
-      <div className="relative w-40 h-40 flex items-center justify-center my-auto">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          {/* Segment 1: Pink #fe7096 (55%) */}
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="transparent"
-            stroke="#fe7096"
-            strokeWidth="18"
-            strokeDasharray={`${p1} ${c - p1}`}
-            strokeDashoffset="0"
-          />
-          {/* Segment 2: Cyan #047edf (30%) */}
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="transparent"
-            stroke="#047edf"
-            strokeWidth="18"
-            strokeDasharray={`${p2} ${c - p2}`}
-            strokeDashoffset={`-${p1}`}
-          />
-          {/* Segment 3: Teal #07cdae (15%) */}
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="transparent"
-            stroke="#07cdae"
-            strokeWidth="18"
-            strokeDasharray={`${p3} ${c - p3}`}
-            strokeDashoffset={`-${p1 + p2}`}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+      <div
+        className="relative w-40 h-40 rounded-full flex items-center justify-center my-auto"
+        style={{ background: total ? `conic-gradient(${stops})` : '#e5e7eb' }}
+      >
+        <div className="absolute inset-[18px] rounded-full bg-white flex flex-col items-center justify-center text-center">
           <span className="text-[11px] font-bold text-gray-400">Total</span>
-          <span className="text-base font-black text-gray-900">100%</span>
+          <span className="text-base font-black text-gray-900">{total}</span>
         </div>
       </div>
 
-      {/* Legend */}
       <div className="w-full space-y-2 pt-4 border-t border-gray-100 text-xs">
-        <div className="flex items-center justify-between text-gray-600">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#047edf]" />
-            <span>Search Engines / Store</span>
+        {groups.map(group => (
+          <div key={group.label} className="flex items-center justify-between text-gray-600">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: group.color }} />
+              <span>{group.label}</span>
+            </div>
+            <span className="font-bold text-gray-800">
+              {group.count} {total ? `(${Math.round((group.count / total) * 100)}%)` : ''}
+            </span>
           </div>
-          <span className="font-bold text-gray-800">55%</span>
-        </div>
-        <div className="flex items-center justify-between text-gray-600">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#fe7096]" />
-            <span>Telegram Bot Direct</span>
-          </div>
-          <span className="font-bold text-gray-800">30%</span>
-        </div>
-        <div className="flex items-center justify-between text-gray-600">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#07cdae]" />
-            <span>Bakong KHQR Payments</span>
-          </div>
-          <span className="font-bold text-gray-800">15%</span>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -368,10 +370,12 @@ function TrafficSourcesChart() {
 export default function App() {
   // Security PIN lock
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem('shoply_admin_auth') === 'true';
+    return Boolean(sessionStorage.getItem('shoply_admin_token'));
   });
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Active navigation tab
   const [activeTab, setActiveTab] = useState('overview');
@@ -464,7 +468,12 @@ export default function App() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchData();
+      checkAdminSession()
+        .then(fetchData)
+        .catch(() => {
+          sessionStorage.removeItem('shoply_admin_token');
+          setIsAuthenticated(false);
+        });
     }
   }, [isAuthenticated]);
 
@@ -483,6 +492,10 @@ export default function App() {
       setSettingsState(typeof settingsRes?.data === 'object' && !Array.isArray(settingsRes.data) ? settingsRes.data : {});
     } catch (err) {
       console.warn('Error fetching admin data:', err.message);
+      if (err.response?.status === 401) {
+        sessionStorage.removeItem('shoply_admin_token');
+        setIsAuthenticated(false);
+      }
       setProducts([]);
       setCategories([]);
       setOrders([]);
@@ -493,19 +506,26 @@ export default function App() {
   };
 
   // ---------------- AUTHENTICATION ----------------
-  const handlePinSubmit = (e) => {
+  const handlePinSubmit = async (e) => {
     e.preventDefault();
-    if (pinInput === '1234' || pinInput.length >= 4) {
-      sessionStorage.setItem('shoply_admin_auth', 'true');
+    if (!pinInput.trim()) return;
+
+    setLoginLoading(true);
+    setPinError(false);
+    try {
+      const response = await loginAdmin(pinInput.trim());
+      sessionStorage.setItem('shoply_admin_token', response.data.token);
       setIsAuthenticated(true);
-      setPinError(false);
-    } else {
+      setPinInput('');
+    } catch (error) {
       setPinError(true);
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('shoply_admin_auth');
+    sessionStorage.removeItem('shoply_admin_token');
     setIsAuthenticated(false);
     setPinInput('');
   };
@@ -1386,8 +1406,15 @@ export default function App() {
   };
 
   // Stats calculation
-  const totalSales = orders.reduce((sum, o) => sum + (o.status !== 'CANCELLED' ? o.totalAmount : 0), 0);
+  const weekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const weeklyOrders = orders.filter(order => new Date(order.createdAt).getTime() >= weekCutoff);
+  const weeklySales = weeklyOrders.reduce((sum, order) => (
+    sum + (order.status !== 'CANCELLED' ? Number(order.totalAmount || 0) : 0)
+  ), 0);
   const pendingOrders = orders.filter(o => o.status === 'PENDING').length;
+  const weeklyPendingOrders = weeklyOrders.filter(order => order.status === 'PENDING').length;
+  const deliveredOrders = weeklyOrders.filter(order => order.status === 'DELIVERED').length;
+  const paymentWebhookUrl = `${API_ORIGIN}/api/payments/khqrcc/webhook`;
   const filteredOrders = orders.filter(o => {
     const matchesStatus = orderFilterStatus === 'ALL' || o.status === orderFilterStatus;
     if (!matchesStatus) return false;
@@ -1413,7 +1440,7 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-2xl space-y-6 text-center">
+        <div className="max-w-md w-full bg-white rounded-3xl p-5 sm:p-8 shadow-2xl space-y-6 text-center">
           <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/30">
             <Lock className="w-8 h-8" />
           </div>
@@ -1421,7 +1448,7 @@ export default function App() {
           <div>
             <h1 className="text-2xl font-black text-gray-900">Shoply Admin Portal</h1>
             <p className="text-xs text-gray-500 mt-1">
-              សូមបញ្ចូលលេខកូដសម្ងាត់ដើម្បីចូលផ្ទាំងគ្រប់គ្រង (Default: <b>1234</b>)
+              សូមបញ្ចូលលេខកូដសម្ងាត់របស់អ្នក ដើម្បីចូលផ្ទាំងគ្រប់គ្រង
             </p>
           </div>
 
@@ -1429,7 +1456,7 @@ export default function App() {
             <div>
               <input
                 type="password"
-                placeholder="Enter PIN (e.g. 1234)"
+                placeholder="Enter admin PIN"
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
                 autoFocus
@@ -1437,16 +1464,17 @@ export default function App() {
               />
               {pinError && (
                 <span className="text-xs text-rose-500 font-medium block mt-1.5">
-                  លេខកូដមិនត្រឹមត្រូវទេ! សូមសាកល្បងលេខ 1234
+                  លេខកូដមិនត្រឹមត្រូវ ឬ server មិនទាន់បានកំណត់ Admin PIN។
                 </span>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/20 active:scale-98 transition-all cursor-pointer"
+              disabled={loginLoading}
+              className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-wait text-white font-bold text-sm shadow-md shadow-indigo-600/20 active:scale-98 transition-all cursor-pointer"
             >
-              ចូលផ្ទាំងគ្រប់គ្រង / Unlock Dashboard
+              {loginLoading ? 'កំពុងពិនិត្យ...' : 'ចូលផ្ទាំងគ្រប់គ្រង / Unlock Dashboard'}
             </button>
           </form>
 
@@ -1460,14 +1488,30 @@ export default function App() {
 
   // ---------------- MAIN DASHBOARD LAYOUT ----------------
   return (
-    <div className="min-h-screen flex bg-[#f2edf3] text-gray-800 font-sans">
+    <div className="min-h-screen flex overflow-x-hidden bg-[#f2edf3] text-gray-800 font-sans">
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-[1px] lg:hidden"
+        />
+      )}
       
       {/* 1. SIDEBAR: FULL HEIGHT COLUMN ON THE LEFT */}
-      <aside className="w-64 bg-white border-r border-gray-200/80 flex flex-col shrink-0 min-h-screen sticky top-0 h-screen">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[86vw] bg-white border-r border-gray-200/80 flex flex-col shrink-0 h-screen transition-transform duration-200 lg:sticky lg:top-0 lg:w-64 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
         {/* Scrollable Sidebar Nav Content */}
         <div className="flex-1 overflow-y-auto flex flex-col">
+          <button
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setSidebarOpen(false)}
+            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-600 lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </button>
           {/* Profile Card */}
-          <div className="p-5 flex items-center justify-between border-b border-gray-100 group">
+          <div className="p-5 pr-14 lg:pr-5 flex items-center justify-between border-b border-gray-100 group">
             <div
               onClick={openEditAdminProfile}
               className="flex items-center gap-3 cursor-pointer min-w-0"
@@ -1514,7 +1558,10 @@ export default function App() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setSidebarOpen(false);
+                  }}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-lg text-xs transition-all cursor-pointer ${
                     active
                       ? 'text-[#b66dff] font-bold bg-purple-50/70 border-l-4 border-[#b66dff]'
@@ -1551,7 +1598,15 @@ export default function App() {
       {/* 2. RIGHT SIDE WRAPPER: TOP NAVBAR + MAIN CONTENT */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* TOP NAVBAR (ONLY OVER MAIN CONTENT AREA) */}
-        <header className="bg-white border-b border-gray-200/80 sticky top-0 z-30 flex items-center justify-between h-16 px-6 sm:px-8 shadow-2xs">
+        <header className="bg-white border-b border-gray-200/80 sticky top-0 z-30 flex items-center justify-between h-16 px-3 sm:px-6 lg:px-8 shadow-2xs">
+          <button
+            type="button"
+            aria-label="Open navigation"
+            onClick={() => setSidebarOpen(true)}
+            className="mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           {/* Search Input */}
           <div className="flex-1 max-w-xl">
             <div className="relative">
@@ -1572,13 +1627,13 @@ export default function App() {
           </div>
 
           {/* Right Top Controls */}
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0 ml-4">
+          <div className="flex items-center gap-1 sm:gap-3 lg:gap-4 shrink-0 ml-2 sm:ml-4">
             {/* Admin Profile Dropdown */}
             <button
               type="button"
               onClick={openEditAdminProfile}
               title="Edit Admin Profile (កែប្រែរូប & ឈ្មោះ)"
-              className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-purple-50 transition-colors cursor-pointer text-left group"
+              className="hidden sm:flex items-center gap-2.5 p-1 rounded-xl hover:bg-purple-50 transition-colors cursor-pointer text-left group"
             >
               <div className="relative shrink-0">
                 <img
@@ -1603,11 +1658,11 @@ export default function App() {
 
             {/* Action Icons */}
             <a
-              href="http://localhost:5173"
+              href={STOREFRONT_URL}
               target="_blank"
               rel="noreferrer"
-              title="Open Storefront (Port 5173)"
-              className="p-2 text-gray-500 hover:text-[#b66dff] hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
+              title="Open Storefront"
+              className="hidden md:block p-2 text-gray-500 hover:text-[#b66dff] hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
             >
               <Maximize2 className="w-4 h-4" />
             </a>
@@ -1643,14 +1698,14 @@ export default function App() {
         </header>
 
         {/* MAIN SCROLLABLE CONTENT */}
-        <main className="p-6 sm:p-8 space-y-6 flex-1">
+        <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 min-w-0">
           
           {/* 1. OVERVIEW TAB */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
                 
                 {/* Announcement Banner */}
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-100 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <span className="text-xs font-bold text-[#b66dff] uppercase tracking-wider block">Shoply Store Management</span>
                     <h2 className="text-base font-bold text-gray-800">
@@ -1660,7 +1715,7 @@ export default function App() {
                       Full control over hero banners, instant inventory updates, KHQR payments, and Telegram alerts.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2.5 shrink-0">
+                  <div className="flex w-full flex-col sm:w-auto sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
                     <button
                       onClick={fetchData}
                       disabled={loading}
@@ -1670,7 +1725,7 @@ export default function App() {
                       <span>Sync Data</span>
                     </button>
                     <a
-                      href="http://localhost:5173"
+                      href={STOREFRONT_URL}
                       target="_blank"
                       rel="noreferrer"
                       className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#da8cff] to-[#9a55ff] text-white text-xs font-bold shadow-xs hover:opacity-95 flex items-center gap-1.5 transition-all"
@@ -1703,15 +1758,15 @@ export default function App() {
                   {/* Card 1: Weekly Sales (Coral/Pink Gradient) */}
                   <div className="bg-gradient-to-r from-[#ffbf96] to-[#fe7096] text-white rounded-xl p-6 relative overflow-hidden shadow-sm flex flex-col justify-between min-h-[160px]">
                     <div className="flex items-center justify-between relative z-10">
-                      <span className="text-sm font-semibold text-white/90">Weekly Sales</span>
+                      <span className="text-sm font-semibold text-white/90">Order Value (7 days)</span>
                       <TrendingUp className="w-5 h-5 text-white/90" />
                     </div>
                     <div className="relative z-10 my-2">
-                      <div className="text-3xl font-black tracking-tight">${totalSales.toFixed(2)}</div>
+                      <div className="text-3xl font-black tracking-tight">${weeklySales.toFixed(2)}</div>
                     </div>
                     <div className="text-xs text-white/90 font-medium relative z-10 flex items-center justify-between">
-                      <span>Increased by 60%</span>
-                      <span className="text-[11px] text-white/80">≈ {(Math.round(totalSales * 4100)).toLocaleString()} ៛</span>
+                      <span>Last 7 days</span>
+                      <span className="text-[11px] text-white/80">≈ {(Math.round(weeklySales * 4100)).toLocaleString()} ៛</span>
                     </div>
                     <CircleWatermark />
                   </div>
@@ -1723,11 +1778,11 @@ export default function App() {
                       <ShoppingBag className="w-5 h-5 text-white/90" />
                     </div>
                     <div className="relative z-10 my-2">
-                      <div className="text-3xl font-black tracking-tight">{orders.length}</div>
+                      <div className="text-3xl font-black tracking-tight">{weeklyOrders.length}</div>
                     </div>
                     <div className="text-xs text-white/90 font-medium relative z-10 flex items-center justify-between">
-                      <span>{pendingOrders > 0 ? `${pendingOrders} Pending confirmation` : 'Decreased by 10%'}</span>
-                      <span className="text-[11px] text-white/80">100% Processed</span>
+                      <span>{weeklyPendingOrders} awaiting confirmation</span>
+                      <span className="text-[11px] text-white/80">{deliveredOrders} delivered</span>
                     </div>
                     <CircleWatermark />
                   </div>
@@ -1735,14 +1790,14 @@ export default function App() {
                   {/* Card 3: Visitors & Inventory (Mint/Teal Aqua Gradient) */}
                   <div className="bg-gradient-to-r from-[#84d9d2] to-[#07cdae] text-white rounded-xl p-6 relative overflow-hidden shadow-sm flex flex-col justify-between min-h-[160px]">
                     <div className="flex items-center justify-between relative z-10">
-                      <span className="text-sm font-semibold text-white/90">Visitors & Inventory</span>
+                      <span className="text-sm font-semibold text-white/90">Catalog & Inventory</span>
                       <Package className="w-5 h-5 text-white/90" />
                     </div>
                     <div className="relative z-10 my-2">
                       <div className="text-3xl font-black tracking-tight">{products.length} Products</div>
                     </div>
                     <div className="text-xs text-white/90 font-medium relative z-10 flex items-center justify-between">
-                      <span>Increased by 5%</span>
+                      <span>{lowStockProducts.length} need restock</span>
                       <span className="text-[11px] text-white/80">{categories.length} Categories</span>
                     </div>
                     <CircleWatermark />
@@ -1752,10 +1807,10 @@ export default function App() {
                 {/* Charts Row: Visit & Sales Bar Chart (col-span-8) + Traffic Sources Donut Chart (col-span-4) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   <div className="lg:col-span-8">
-                    <VisitAndSalesChart />
+                    <VisitAndSalesChart orders={orders} />
                   </div>
                   <div className="lg:col-span-4">
-                    <TrafficSourcesChart />
+                    <OrderStatusChart orders={orders} />
                   </div>
                 </div>
 
@@ -4088,8 +4143,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => {
-                              const webhookUrl = `${window.location.protocol}//${window.location.hostname}:5000/api/payments/khqrcc/webhook`;
-                              navigator.clipboard.writeText(webhookUrl);
+                              navigator.clipboard.writeText(paymentWebhookUrl);
                               setCopiedWebhook(true);
                               setTimeout(() => setCopiedWebhook(false), 2500);
                             }}
@@ -4109,7 +4163,7 @@ export default function App() {
                           </button>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-2 font-mono text-[11px] text-gray-700 border border-gray-200 select-all overflow-x-auto">
-                          {typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000/api/payments/khqrcc/webhook` : '/api/payments/khqrcc/webhook'}
+                          {paymentWebhookUrl}
                         </div>
                         <p className="text-[11px] text-gray-500 leading-relaxed">
                           ចម្លងតំណ Webhook នេះទៅដាក់ក្នុងផ្ទាំងគណនី Merchant លើ khqr.cc ដើម្បីឱ្យប្រព័ន្ធទទួលដំណឹងទូទាត់ភ្លាមៗនៅពេលអតិថិជនបានផ្ទេរប្រាក់ជោគជ័យ។

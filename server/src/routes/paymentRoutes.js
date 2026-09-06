@@ -1,5 +1,6 @@
 import express from 'express';
 import khqrccService from '../services/khqrccService.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -63,7 +64,7 @@ router.post('/khqrcc/webhook', async (req, res) => {
  * @route POST /api/payments/simulate-confirm
  * @desc Test/Sandbox simulation to mark an order as confirmed
  */
-router.post('/simulate-confirm', async (req, res) => {
+router.post('/simulate-confirm', requireAdmin, async (req, res) => {
   try {
     const { orderNumber } = req.body;
     if (!orderNumber) {

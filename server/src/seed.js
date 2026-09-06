@@ -1,11 +1,15 @@
 import prisma from './prisma.js';
 
 async function main() {
-  console.log('🌱 Clearing existing database records...');
-  await prisma.order.deleteMany({});
-  await prisma.product.deleteMany({});
-  await prisma.category.deleteMany({});
-  await prisma.setting.deleteMany({});
+  const [categoryCount, productCount] = await Promise.all([
+    prisma.category.count(),
+    prisma.product.count(),
+  ]);
+
+  if (categoryCount > 0 || productCount > 0) {
+    console.log('Database already contains catalog data. Skipping seed.');
+    return;
+  }
 
   console.log('🌱 Seeding default settings...');
   const settings = [
@@ -20,7 +24,11 @@ async function main() {
   ];
 
   for (const s of settings) {
-    await prisma.setting.create({ data: s });
+    await prisma.setting.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s,
+    });
   }
 
   console.log('🌱 Seeding categories...');

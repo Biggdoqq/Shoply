@@ -66,7 +66,7 @@ npm run install:all
 cd server
 copy .env.example .env
 ```
-*(បើកកែ `.env` បញ្ចូល TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, និង KHQRPAY_PROFILE_ID / SECRET_KEY របស់អ្នក)*
+*(បើកកែ `.env` បញ្ចូល ADMIN_PIN, ADMIN_TOKEN_SECRET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID និង KHQRPAY_PROFILE_ID / SECRET_KEY របស់អ្នក)*
 
 ### ៤. បង្កើត Database និងដាក់ទិន្នន័យគំរូ (Seed Database)
 ```bash
@@ -83,7 +83,7 @@ npm run dev
 
 ពេលដំណើរការជោគជ័យ លោកអ្នកអាចចូលទៅកាន់៖
 - 🛒 **Storefront (សម្រាប់អតិថិជន)**: [http://localhost:5173](http://localhost:5173)
-- 🛡️ **Admin Portal (សម្រាប់ម្ចាស់ហាង)**: [http://localhost:5174](http://localhost:5174) *(PIN: `1234`)*
+- 🛡️ **Admin Portal (សម្រាប់ម្ចាស់ហាង)**: [http://localhost:5174](http://localhost:5174) *(ប្រើ `ADMIN_PIN` ក្នុង `server/.env`)*
 - ⚙️ **Backend API**: [http://localhost:5000/api/settings](http://localhost:5000/api/settings)
 
 ---
@@ -96,11 +96,16 @@ npm run dev
 3. ភ្ជាប់ជាមួយ Repository `Biggdoqq/Shoply`
 4. Render នឹងអាន File `render.yaml` ដោយស្វ័យប្រវត្តិ
 5. បំពេញ Environment Variables:
+   - `ADMIN_PIN` (លេខសម្ងាត់ថ្មីសម្រាប់ Admin)
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
    - `KHQRPAY_PROFILE_ID`
    - `KHQRPAY_SECRET_KEY`
-6. ចុច **Apply** — រួចរាល់! Render នឹងចេញ URL ផ្ទាល់ខ្លួនមួយ (ឧ. `https://shoply.onrender.com`) ដែលអាចចូលមើលបានទាំង Storefront (`/`), Admin (`/admin`), និង API (`/api`)។
+6. ចុច **Apply**។ Blueprint នឹងបង្កើត PostgreSQL database និង Backend URL មួយ (ឧ. `https://shoply.onrender.com`)។
+7. នៅ Vercel Project Settings → Environment Variables បង្កើត `BACKEND_URL` ហើយដាក់ Render Backend URL ខាងលើ។
+8. Redeploy Vercel។ `/api` និង `/uploads` នឹងបញ្ជូន request ទៅ backend ពិត ហើយ Admin នឹងអាន/កែ PostgreSQL database ដូចគ្នាជាមួយ Storefront។
+
+> Render PostgreSQL ផែនការ Free មានអាយុ 30 ថ្ងៃ។ សម្រាប់ហាងដែលប្រើជាផ្លូវការ គួរប្រើ PostgreSQL ផែនការដែលរក្សាទិន្នន័យរយៈពេលវែង។
 
 ### ជម្រើសទី ២៖ Deploy លើ VPS (Ubuntu / Linux) ជាមួយ Docker
 ប្រសិនបើលោកអ្នកមាន Cloud VPS (Hostinger, DigitalOcean, Hetzner, etc.):

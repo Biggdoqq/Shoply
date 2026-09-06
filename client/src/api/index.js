@@ -35,6 +35,7 @@ export const deleteCategory = (id) => api.delete(`/categories/${id}`);
 
 export const createOrder = (data) => api.post('/orders', data);
 export const getOrders = (params) => api.get('/orders', { params });
+export const trackOrder = (search) => api.get('/orders/track', { params: { search } });
 export const getOrderById = (id) => api.get(`/orders/${id}`);
 export const updateOrderStatus = (id, status) => api.put(`/orders/${id}/status`, { status });
 export const deleteOrder = (id) => api.delete(`/orders/${id}`);
@@ -44,6 +45,9 @@ export const updateSettings = (data) => api.put('/settings', data);
 export const testTelegram = (data) => api.post('/settings/test-telegram', data);
 
 export const uploadImage = (formData) => api.post('/upload', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' },
+});
+export const uploadPaymentProof = (formData) => api.post('/upload/payment-proof', formData, {
   headers: { 'Content-Type': 'multipart/form-data' },
 });
 

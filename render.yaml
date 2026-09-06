@@ -1,20 +1,36 @@
+databases:
+  - name: shoply-db
+    databaseName: shoply
+    user: shoply
+    plan: free
+    region: singapore
+
 services:
   - type: web
     name: shoply
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm run build:prod
+    buildCommand: npm run build:render
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        value: file:./dev.db
+        fromDatabase:
+          name: shoply-db
+          property: connectionString
+      - key: CLIENT_URL
+        value: https://shoply-puce.vercel.app
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: ADMIN_PIN
+        sync: false
+      - key: ADMIN_TOKEN_SECRET
+        generateValue: true
       - key: TELEGRAM_CHAT_ID
         sync: false
       - key: KHQRPAY_PROFILE_ID

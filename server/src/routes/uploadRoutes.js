@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { requireAdmin } from '../middleware/adminAuth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,7 +41,7 @@ const upload = multer({
 
 const router = express.Router();
 
-router.post('/', upload.single('image'), (req, res) => {
+const sendUploadedFile = (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image file uploaded' });
   }
@@ -51,9 +52,12 @@ router.post('/', upload.single('image'), (req, res) => {
     filename: req.file.filename,
     size: req.file.size
   });
-});
+};
 
-router.post('/multiple', upload.array('images', 5), (req, res) => {
+router.post('/payment-proof', upload.single('image'), sendUploadedFile);
+router.post('/', requireAdmin, upload.single('image'), sendUploadedFile);
+
+router.post('/multiple', requireAdmin, upload.array('images', 5), (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ error: 'No image files uploaded' });
   }

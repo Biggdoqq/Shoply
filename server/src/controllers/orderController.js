@@ -118,6 +118,34 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+export const trackOrder = async (req, res) => {
+  try {
+    const search = String(req.query.search || '').trim();
+    if (!search) {
+      return res.status(400).json({ error: 'Order number or phone number is required' });
+    }
+
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { orderNumber: search },
+          { customerPhone: search },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!order) return res.json([]);
+
+    return res.json([{
+      ...order,
+      items: typeof order.items === 'string' ? JSON.parse(order.items || '[]') : order.items,
+    }]);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 export const getOrderByIdOrNumber = async (req, res) => {
   try {
     const { id } = req.params;

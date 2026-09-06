@@ -14,7 +14,7 @@ import {
   XCircle,
   FileText
 } from 'lucide-react';
-import { getOrders, getOrderById } from '../api';
+import { trackOrder, getOrderById } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useSettings } from '../context/SettingsContext';
 
@@ -58,7 +58,7 @@ export default function TrackOrderPage() {
       }
 
       // Fallback: search across orders
-      const res = await getOrders({ search: term });
+      const res = await trackOrder(term);
       const list = res.data || [];
       if (list.length > 0) {
         setOrder(list[0]);

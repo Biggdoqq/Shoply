@@ -11,6 +11,12 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('shoply_admin_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 // Guard against HTML error pages or SPA rewrites masquerading as JSON
 api.interceptors.response.use(
   (response) => {
@@ -19,8 +25,16 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    if (error.response?.status === 401) {
+      sessionStorage.removeItem('shoply_admin_token');
+    }
+    return Promise.reject(error);
+  }
 );
+
+export const loginAdmin = (pin) => api.post('/admin/login', { pin });
+export const checkAdminSession = () => api.get('/admin/session');
 
 export const getProducts = (params) => api.get('/products', { params });
 export const getProductById = (id) => api.get(`/products/${id}`);
@@ -37,7 +51,7 @@ export const getOrders = (params) => api.get('/orders', { params });
 export const updateOrderStatus = (id, status) => api.put(`/orders/${id}/status`, { status });
 export const deleteOrder = (id) => api.delete(`/orders/${id}`);
 
-export const getSettings = () => api.get('/settings');
+export const getSettings = () => api.get('/settings/admin');
 export const updateSettings = (data) => api.put('/settings', data);
 export const testTelegram = (data) => api.post('/settings/test-telegram', data);
 
