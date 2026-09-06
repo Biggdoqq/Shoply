@@ -67,6 +67,10 @@ const DEFAULT_SLIDES = [
 export default function HeroBannerSlider({ storeSettings = {} }) {
   const { lang, t } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const minSwipeDistance = 45;
 
   // Parse slides from settings if available
   const slides = React.useMemo(() => {
@@ -127,7 +131,7 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
     return DEFAULT_SLIDES;
   }, [storeSettings.hero_banners, storeSettings.hero_banner_image]);
 
-  // Clean auto-switch every 5 seconds (Zero animation)
+  // Clean auto-switch every 5 seconds
   useEffect(() => {
     if (slides.length <= 1) return;
 
@@ -146,36 +150,59 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
+  // Touch swipe handling for mobile
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > minSwipeDistance) {
+      goToNext();
+    } else if (distance < -minSwipeDistance) {
+      goToPrev();
+    }
+  };
+
   const activeSlide = slides[currentSlide] || slides[0];
 
   return (
-    <section className="relative overflow-hidden bg-slate-950 text-white rounded-3xl mx-4 sm:mx-6 lg:mx-8 mt-4 shadow-2xl h-[520px] sm:h-[560px] lg:h-[600px] flex flex-col justify-between select-none">
-      
-      {/* Slide Background Image (Static, Clean, No Animation) */}
+    <section 
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      className="relative overflow-hidden bg-slate-950 text-white rounded-2xl sm:rounded-3xl mx-3 sm:mx-6 lg:mx-8 mt-2.5 sm:mt-4 shadow-lg sm:shadow-2xl h-[210px] xs:h-[235px] sm:h-[320px] md:h-[400px] lg:h-[460px] flex flex-col justify-between select-none"
+    >
+      {/* Slide Background Image */}
       <div className="absolute inset-0 z-0">
         <img
           src={activeSlide.image}
           alt={lang === 'km' ? activeSlide.titleKm : activeSlide.titleEn}
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-center transition-all duration-700"
         />
-        {/* Dark Gradient Overlay for Readability */}
-        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/75 to-indigo-950/50" />
-        <div className="absolute inset-0 bg-radial-to-c from-transparent via-slate-950/40 to-slate-950/80" />
+        {/* Soft, vibrant gradient overlay - preserves image clarity on mobile */}
+        <div className="absolute inset-0 bg-linear-to-r from-slate-950/90 via-slate-950/60 to-slate-950/20 sm:bg-linear-to-t sm:from-slate-950 sm:via-slate-950/70 sm:to-indigo-950/40" />
       </div>
 
       {/* Decorative subtle dot pattern (Static) */}
-      <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none z-1" />
+      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#818cf8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none z-1" />
 
-      {/* Slide Content - Uniform Vertically Centered Container */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-6 sm:py-8 lg:py-10 flex-1 flex flex-col items-center justify-center text-center overflow-hidden">
+      {/* Slide Content - Clean, responsive, never crammed */}
+      <div className="relative z-10 max-w-5xl px-4 py-3 sm:px-8 sm:py-8 lg:py-10 flex-1 flex flex-col justify-center items-start sm:items-center text-left sm:text-center overflow-hidden">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/25 border border-indigo-400/35 text-indigo-200 text-xs font-semibold mb-4 backdrop-blur-md shrink-0">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-4 sm:py-1.5 rounded-full bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[10px] sm:text-xs font-semibold mb-1.5 sm:mb-3 backdrop-blur-md shrink-0">
+          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
           <span>{lang === 'km' ? activeSlide.badgeKm : activeSlide.badgeEn}</span>
         </div>
 
         {/* Headline */}
-        <h1 className="font-koulen text-3xl sm:text-5xl lg:text-6xl font-normal tracking-wide max-w-3xl leading-tight line-clamp-2">
+        <h1 className="font-koulen text-xl xs:text-2xl sm:text-4xl lg:text-5xl font-normal tracking-wide max-w-[280px] xs:max-w-xs sm:max-w-3xl leading-tight line-clamp-2 drop-shadow-sm">
           {lang === 'km' ? (
             <>
               {activeSlide.titleKm}{' '}
@@ -193,31 +220,31 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
           )}
         </h1>
 
-        {/* Subtitle */}
-        <p className="mt-3 sm:mt-4 text-xs sm:text-sm lg:text-base text-indigo-100/90 max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-3">
+        {/* Subtitle - Visible on tablets and desktop for clean breathing room on mobile */}
+        <p className="hidden sm:block mt-2 sm:mt-3 text-xs sm:text-sm lg:text-base text-indigo-100/90 max-w-2xl leading-relaxed line-clamp-2">
           {lang === 'km' ? activeSlide.subtitleKm : activeSlide.subtitleEn}
         </p>
 
-        {/* CTA Buttons */}
-        <div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 shrink-0">
+        {/* Primary CTA Button */}
+        <div className="mt-2.5 sm:mt-6 flex items-center gap-2 sm:gap-4 shrink-0">
           <Link
             to={activeSlide.link || '/shop'}
-            className="px-7 py-3 rounded-2xl bg-white text-indigo-950 font-bold text-sm shadow-xl hover:bg-indigo-50 active:scale-95 flex items-center gap-2 cursor-pointer transition-colors"
+            className="px-4 py-1.5 sm:px-7 sm:py-3 rounded-xl sm:rounded-2xl bg-white text-indigo-950 font-bold text-xs sm:text-sm shadow-md hover:bg-indigo-50 active:scale-95 flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <span>{lang === 'km' ? activeSlide.buttonTextKm : activeSlide.buttonTextEn}</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
 
           <a
             href="#categories-section"
-            className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-sm backdrop-blur-md transition-colors"
+            className="hidden sm:inline-flex px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-sm backdrop-blur-md transition-colors"
           >
             {t('explore_catalog')}
           </a>
         </div>
 
-        {/* Telegram Bot Notice Tag */}
-        <div className="mt-5 sm:mt-6 flex items-center gap-2 text-xs text-indigo-200 bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/15 shrink-0">
+        {/* Telegram Bot Notice Tag (Desktop only) */}
+        <div className="hidden sm:flex mt-4 items-center gap-2 text-xs text-indigo-200 bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/15 shrink-0">
           <Send className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           <span>
             {lang === 'km' 
@@ -227,14 +254,13 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
         </div>
       </div>
 
-      {/* Navigation Controls: Previous / Next Arrows */}
+      {/* Navigation Controls: Previous / Next Arrows (Desktop Only - Clean on Mobile) */}
       {slides.length > 1 && (
-        <>
+        <div className="hidden md:block">
           <button
             onClick={goToPrev}
             className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-2xl bg-black/50 hover:bg-black/80 border border-white/20 text-white backdrop-blur-md flex items-center justify-center cursor-pointer shadow-md transition-colors"
             aria-label="Previous Slide"
-            title="Previous slide"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -243,18 +269,16 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
             onClick={goToNext}
             className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-2xl bg-black/50 hover:bg-black/80 border border-white/20 text-white backdrop-blur-md flex items-center justify-center cursor-pointer shadow-md transition-colors"
             aria-label="Next Slide"
-            title="Next slide"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
-        </>
+        </div>
       )}
 
-      {/* Bottom Controls Bar */}
+      {/* Bottom Controls: Dots Indicator & Counter */}
       {slides.length > 1 && (
-        <div className="relative z-20 pb-5 px-6 flex flex-col sm:flex-row items-center justify-between gap-3 bg-linear-to-t from-slate-950/90 to-transparent shrink-0">
-          
-          {/* Slide Category Tabs */}
+        <div className="relative z-20 pb-2.5 sm:pb-4 px-4 sm:px-6 flex items-center justify-between shrink-0">
+          {/* Slide Category Tabs (Desktop Only) */}
           <div className="hidden md:flex items-center gap-2">
             {slides.map((s, idx) => {
               const isCurrent = idx === currentSlide;
@@ -262,7 +286,7 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
                 <button
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-all ${
                     isCurrent
                       ? 'bg-white text-indigo-950 font-bold shadow-sm'
                       : 'bg-black/40 hover:bg-black/60 text-gray-300 border border-white/10'
@@ -276,27 +300,26 @@ export default function HeroBannerSlider({ storeSettings = {} }) {
           </div>
 
           {/* Dots Indicator & Counter */}
-          <div className="flex items-center gap-3 mx-auto md:mx-0">
-            <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto sm:mx-auto md:ml-auto">
+            <div className="flex items-center gap-1 bg-black/40 backdrop-blur-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-white/10">
               {slides.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setCurrentSlide(idx)}
-                  className={`rounded-full cursor-pointer ${
+                  className={`rounded-full transition-all cursor-pointer ${
                     idx === currentSlide 
-                      ? 'w-6 h-2 bg-white' 
-                      : 'w-2 h-2 bg-white/40 hover:bg-white/70'
+                      ? 'w-4 sm:w-6 h-1.5 sm:h-2 bg-white' 
+                      : 'w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white/40 hover:bg-white/70'
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
               ))}
             </div>
 
-            <span className="text-[11px] font-mono font-bold text-white/80 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+            <span className="text-[10px] sm:text-[11px] font-mono font-bold text-white/80 bg-black/40 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-white/10">
               0{currentSlide + 1} / 0{slides.length}
             </span>
           </div>
-
         </div>
       )}
     </section>

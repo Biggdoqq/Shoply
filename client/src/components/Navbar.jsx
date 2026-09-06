@@ -239,9 +239,59 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* Instant Mobile Search Bar */}
+      <div className="md:hidden px-4 pb-2.5 pt-0.5 border-t border-gray-100/70 bg-white">
+        <div ref={searchContainerRef} className="relative">
+          <form onSubmit={handleSearch} className="relative">
+            <input
+              type="text"
+              placeholder={t('search_placeholder')}
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onFocus={() => {
+                if (searchTerm.trim().length >= 1) setShowSuggestions(true);
+              }}
+              className="w-full bg-gray-100/90 focus:bg-white text-xs text-gray-800 rounded-full pl-9 pr-4 py-2 border border-gray-200/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-hidden transition-all shadow-2xs"
+            />
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </form>
+
+          {/* Mobile Live Suggestions */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
+                {suggestions.map((p) => {
+                  const img = Array.isArray(p.images) ? p.images[0] : (p.image || '');
+                  const title = lang === 'km' ? p.nameKh || p.nameEn : p.nameEn || p.nameKh;
+                  const price = p.salePrice || p.price;
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => handleSelectSuggestion(p.id)}
+                      className="p-2.5 flex items-center gap-3 hover:bg-indigo-50/60 transition-colors cursor-pointer"
+                    >
+                      <img
+                        src={img || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'}
+                        alt=""
+                        className="w-9 h-9 rounded-lg object-cover bg-gray-100 border border-gray-200 shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-semibold text-gray-900 block truncate">{title}</span>
+                        <span className="text-xs font-bold text-indigo-600">${Number(price).toFixed(2)}</span>
+                      </div>
+                      <ArrowRight className="w-3 h-3 text-gray-400 shrink-0" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pt-3 pb-6 space-y-3">
+        <div className="md:hidden border-t border-gray-100 bg-white px-4 pt-2 pb-6 space-y-2">
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"

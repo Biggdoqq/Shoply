@@ -202,29 +202,67 @@ export default function HomePage() {
 
 
   return (
-    <div className="space-y-16 pb-16">
+    <div className="space-y-6 sm:space-y-14 pb-16">
       
       {/* Dynamic Animated Multi-Image Hero Banner */}
       <HeroBannerSlider storeSettings={storeSettings} />
 
+      {/* Quick Categories Bar (Circular App-Style Icons) - Essential for Mobile E-Commerce */}
+      {categories.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{lang === 'km' ? 'ប្រភេទពេញនិយម' : 'Top Categories'}</span>
+            </h2>
+            <Link to="/shop" className="text-xs text-indigo-600 font-semibold hover:text-indigo-700 flex items-center gap-1">
+              <span>{lang === 'km' ? 'មើលទាំងអស់' : 'See all'}</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          
+          <div className="flex items-center gap-3.5 sm:gap-6 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                to={`/shop?category=${cat.slug}`}
+                className="flex flex-col items-center shrink-0 group cursor-pointer"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border border-gray-200/90 shadow-2xs group-hover:border-indigo-500 group-hover:shadow-md transition-all p-1 flex items-center justify-center overflow-hidden">
+                  <img
+                    src={cat.image || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=120'}
+                    alt={lang === 'km' ? cat.nameKh : cat.nameEn}
+                    className="w-full h-full object-cover rounded-xl group-hover:scale-110 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </div>
+                <span className="text-[11px] font-semibold text-gray-700 text-center max-w-[70px] truncate mt-1.5 group-hover:text-indigo-600 transition-colors">
+                  {lang === 'km' ? cat.nameKh : cat.nameEn}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Trust & Stats Showcase Strip */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
           {stats.map((item, idx) => {
             const Icon = item.icon;
             return (
               <div 
                 key={idx} 
-                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-xs hover:shadow-md transition-all flex items-center gap-3.5 group"
+                className="bg-white rounded-2xl p-3 sm:p-5 border border-gray-100 shadow-2xs hover:shadow-md transition-all flex items-center gap-2.5 sm:gap-3.5 group"
               >
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110 ${item.color}`}>
-                  <Icon className="w-5 h-5" />
+                <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110 ${item.color}`}>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-koulen text-lg sm:text-xl text-gray-900 leading-tight">
+                  <div className="font-koulen text-base sm:text-xl text-gray-900 leading-tight">
                     {item.value}
                   </div>
-                  <div className="text-xs text-gray-500 font-medium truncate mt-0.5">
+                  <div className="text-[11px] sm:text-xs text-gray-500 font-medium truncate mt-0.5">
                     {lang === 'km' ? item.labelKm : item.labelEn}
                   </div>
                 </div>
@@ -236,7 +274,7 @@ export default function HomePage() {
 
       {/* Flash Sale Section with Countdown Timer */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-linear-to-r from-rose-50 via-amber-50/60 to-indigo-50/50 rounded-3xl p-6 sm:p-8 border border-rose-200/70 shadow-sm relative overflow-hidden">
+        <div className="bg-linear-to-r from-rose-50 via-amber-50/60 to-indigo-50/50 rounded-2xl sm:rounded-3xl p-4 sm:p-8 border border-rose-200/70 shadow-xs relative overflow-hidden">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-rose-200/50">
             <div className="space-y-1">

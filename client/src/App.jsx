@@ -16,7 +16,7 @@ import MobileBottomNav from './components/MobileBottomNav';
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans selection:bg-indigo-500 selection:text-white pb-14 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans selection:bg-indigo-500 selection:text-white pb-20 md:pb-0">
       <Navbar />
       
       <main className="flex-1">

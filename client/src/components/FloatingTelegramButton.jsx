@@ -25,10 +25,10 @@ export default function FloatingTelegramButton() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on Telegram"
-        className="fixed bottom-20 md:bottom-6 right-5 z-40 flex items-center gap-2.5 bg-[#229ED9] text-white px-3.5 py-2.5 rounded-full shadow-lg hover:bg-[#1e8cc1] transition-colors focus:outline-none focus:ring-2 focus:ring-[#229ED9] focus:ring-offset-2 group"
+        className="fixed bottom-18 md:bottom-6 right-3.5 sm:right-6 z-30 flex items-center gap-2 bg-[#229ED9] hover:bg-[#1b8ec5] text-white p-2.5 sm:px-4 sm:py-2.5 rounded-full shadow-lg shadow-[#229ED9]/30 active:scale-95 transition-all cursor-pointer"
       >
-        <div className="w-6 h-6 flex items-center justify-center">
-          <Send className="w-5 h-5 -rotate-12 translate-x-0.5" />
+        <div className="w-5 h-5 flex items-center justify-center">
+          <Send className="w-4 h-4 -rotate-12 translate-x-0.5" />
         </div>
         <span className="hidden sm:inline-block text-xs font-semibold tracking-wide pr-1">
           {lang === 'km' ? 'ឆាត Telegram' : 'Chat Support'}
